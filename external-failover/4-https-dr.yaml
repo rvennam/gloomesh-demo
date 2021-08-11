@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+ name: external-dynamodb-dr
+spec:
+ host: mydb.com
+ trafficPolicy:
+   tls:
+     mode: SIMPLE
+   loadBalancer:
+     simple: ROUND_ROBIN
+     localityLbSetting:
+       enabled: true
+       failover:
+         - from: us-east4
+           to: us-west
+        # distribute:
+        # - from: us-east4/zone1/*
+        #   to:
+        #     "us-east4/zone1/*": 70
+        #     "us-west/zone1/*": 20
+        #     "us-south/zone1/*": 10
+   outlierDetection:
+     consecutive5xxErrors: 1
+     interval: 15s
+     baseEjectionTime: 1m

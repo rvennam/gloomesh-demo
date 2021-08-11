@@ -1,0 +1,60 @@
+apiVersion: rbac.enterprise.mesh.gloo.solo.io/v1
+kind: Role
+metadata:
+  name: destination-consumer-role
+  namespace: gloo-mesh
+spec:
+  # A Destination consumer has the ability to configure policies that affect the network edge between
+  # a specific workload and an upstream Destination.
+  trafficPolicyScopes:
+    - trafficPolicyActions:
+        - RETRIES
+        - REQUEST_TIMEOUT
+        - FAULT_INJECTION
+      destinationSelectors:
+        # The absence of kubeServiceMatcher disallows selecting Destinations by kubeServiceMatcher
+        - kubeServiceRefs:
+            services:
+              - name: ratings
+                namespace: bookinfo
+                clusterName: "*"
+      workloadSelectors:
+        - kubeWorkloadMatcher:
+            labels:
+              app: productpage
+              version: v1
+            namespaces:
+              - bookinfo
+            clusters:
+              - "*"
+  # An empty virtualMeshScopes field means that no virtual mesh actions are allowed
+  # An empty failoverServiceScopes field means that no failover services can be applied by this role bearer
+  accessPolicyScopes:
+    - identitySelectors:
+        - kubeServiceAccountRefs:
+            serviceAccounts:
+              - name: "productpage"
+                namespace: "bookinfo"
+                clusterName: "*"
+    - destinationSelectors:
+        # The absence of kubeServiceMatcher disallows selecting Destinations by kubeServiceMatcher
+        - kubeServiceRefs:
+            services:
+              - name: ratings
+                namespace: bookinfo
+                clusterName: "*"
+---
+apiVersion: rbac.enterprise.mesh.gloo.solo.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: gloo-mesh
+  name: destination-consumer-role-binding
+  namespace: gloo-mesh
+spec:
+  roleRef:
+    name: destination-consumer-role
+    namespace: gloo-mesh
+  subjects:
+    - kind: User
+      name: Gloo

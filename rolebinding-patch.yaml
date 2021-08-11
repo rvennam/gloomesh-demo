@@ -1,0 +1,7 @@
+spec:
+  roleRef:
+    name: admin-role
+    namespace: gloo-mesh
+  subjects:
+  - kind: User
+    name: IAM#ram.vennam@solo.io

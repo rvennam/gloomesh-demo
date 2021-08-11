@@ -1,0 +1,11 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+ name: external-dynamodb-dr
+spec:
+ host: mydb.com
+ trafficPolicy:
+   outlierDetection:
+     consecutive5xxErrors: 1
+     interval: 15s
+     baseEjectionTime: 1m

@@ -1,0 +1,16 @@
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: AccessPolicy
+metadata:
+  namespace: gloo-mesh
+  name: ratings-to-all
+spec:
+  sourceSelector:
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: bookinfo-ratings
+          namespace: default
+          clusterName: remotecluster1
+  destinationSelector:
+  - kubeServiceMatcher:
+      namespaces:
+      - default

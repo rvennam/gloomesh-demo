@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-dynamodb-svc
+spec:
+  hosts:
+  - mydb.com
+  location: MESH_EXTERNAL
+  ports:
+  - number: 80
+    name: http-port
+    protocol: HTTP
+    targetPort: 443
+  resolution: DNS
+  endpoints:
+  - address: dynamodb.us-east-1.amazonaws.com
+    locality: us-east4
+  - address: dynamodb.us-west-1.amazonaws.com
+    locality: us-west

@@ -1,0 +1,25 @@
+# product and reviews can talk to services in the default namespace
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: AccessPolicy
+metadata:
+  namespace: gloo-mesh
+  name: bookinfo
+spec:
+  sourceSelector:
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: bookinfo-productpage
+          namespace: default
+          clusterName: remotecluster1
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: bookinfo-reviews
+          namespace: default
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: bookinfo-ratings
+          namespace: default
+  destinationSelector:
+  - kubeServiceMatcher:
+      namespaces:
+      - default

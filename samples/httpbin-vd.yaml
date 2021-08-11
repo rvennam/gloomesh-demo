@@ -1,0 +1,19 @@
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualDestination
+metadata:
+  name: httpbin-global
+  namespace: gloo-mesh
+spec:
+  hostname: httpbin.global
+  port:
+    number: 8000
+    protocol: http
+  localized:
+    destinationSelectors:
+    - kubeServiceMatcher:
+        labels:
+          app: httpbin
+  virtualMesh:
+    name: virtual-mesh
+    namespace: gloo-mesh
+    
