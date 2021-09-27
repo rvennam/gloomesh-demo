@@ -1,0 +1,25 @@
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualHost
+metadata:
+  name: hw-virtualhost
+  namespace: gloo-mesh
+spec:
+  domains:
+  - 'myapp.com'
+  routes:
+  - matchers:
+    - uri:
+        exact: /helloworld
+    name: helloworld
+    routeAction:
+      destinations:
+      - kubeService:
+          name: helloworld
+          namespace: ns1
+          clusterName: cluster1
+          weight: 90
+      - kubeService:
+          name: helloworld
+          namespace: ns2
+          clusterName: cluster2
+          weight: 10

@@ -1,0 +1,33 @@
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: TrafficPolicy
+metadata:
+  namespace: gloo-mesh
+  name: reviews-tp
+spec:
+  sourceSelector:
+  - kubeWorkloadMatcher:
+      namespaces:
+      - default
+  destinationSelector:
+  - kubeServiceRefs:
+      services:
+        - clusterName: cluster2
+          name: reviews
+          namespace: default
+  policy:
+    trafficShift:
+      destinations:
+        - kubeService:
+            clusterName: cluster2
+            name: reviews
+            namespace: default
+            subset:
+              version: v1
+          weight: 30
+        - kubeService:
+            clusterName: remotecluster2
+            name: reviews
+            namespace: default
+            subset:
+              version: v3
+          weight: 70

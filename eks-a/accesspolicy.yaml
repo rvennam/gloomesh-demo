@@ -1,0 +1,57 @@
+# product and reviews can talk to services in the default namespace
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: AccessPolicy
+metadata:
+  namespace: gloo-mesh
+  name: bookinfo
+spec:
+  sourceSelector:
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: bookinfo-productpage
+          namespace: default
+          clusterName: cluster2
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: bookinfo-reviews
+          namespace: default
+  destinationSelector:
+  - kubeServiceMatcher:
+      namespaces:
+      - default
+---
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: AccessPolicy
+metadata:
+  namespace: gloo-mesh
+  name: istio-ingressgateway
+spec:
+  sourceSelector:
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: istio-ingressgateway-service-account
+          namespace: istio-system
+          clusterName: cluster2
+  destinationSelector:
+  - kubeServiceMatcher:
+      namespaces:
+      - default
+      labels:
+        service: productpage
+---
+# product and reviews can talk to services in the default namespace
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: AccessPolicy
+metadata:
+  namespace: gloo-mesh
+  name: bookinfo
+spec:
+  sourceSelector:
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: sleep
+          namespace: default
+  destinationSelector:
+  - kubeServiceMatcher:
+      namespaces:
+      - default
