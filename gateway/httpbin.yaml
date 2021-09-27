@@ -1,0 +1,53 @@
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualHost
+metadata:
+  name: demo-virtualhost
+  namespace: gloo-mesh
+spec:
+  domains:
+  - "example.com"
+  routes:
+  - matchers:
+    - uri:
+        prefix: /status
+    - uri:
+        prefix: /delay
+    name: httpbin
+    routeAction:
+      destinations:
+      - kubeService:
+          clusterName: remotecluster1
+          name: httpbin
+          namespace: default
+          port: 8000
+        weight: 10
+      - kubeService:
+          clusterName: remotecluster2
+          name: httpbin
+          namespace: default
+          port: 8000
+        weight: 90
+---
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualGateway
+metadata:
+  name: demo-gateway
+  namespace: gloo-mesh
+spec:
+  connectionHandlers:
+  - http:
+      routeConfig:
+      - virtualHostSelector:
+          namespaces:
+          - "gloo-mesh"
+  ingressGatewaySelectors:
+  - portName: http2
+    destinationSelectors:
+    - kubeServiceMatcher:
+        clusters:
+        - remotecluster1
+        - remotecluster2
+        labels:
+          istio: ingressgateway
+        namespaces:
+        - istio-system

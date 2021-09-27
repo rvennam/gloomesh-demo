@@ -1,0 +1,41 @@
+apiVersion: discovery.mesh.gloo.solo.io/v1
+kind: Destination
+metadata:
+  name: my-ext-service-tt
+  namespace: gloo-mesh
+spec:
+  externalService:
+    endpoints:
+    - address: cnn.org
+      ports:
+        http: 80
+    hosts:
+      - cnn.org
+    name: cnn
+    ports:
+      - name: http
+        number: 80
+        protocol: http
+---
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: ServiceDependency
+metadata:
+  name: productpage-to-ext-service
+  namespace: gloo-mesh
+spec:
+  sourceSelectors:
+  - kubeWorkloadMatcher:
+      labels:
+        app: productpage
+      namespaces:
+      - default
+  destinationSelectors:
+  - externalServiceRefs:
+      externalServices:
+      - name: my-ext-service-tt
+        namespace: gloo-mesh
+  - kubeServiceRefs:
+      services:
+      - name: reviews
+        namespace: default
+        clusterName: remotecluster2
