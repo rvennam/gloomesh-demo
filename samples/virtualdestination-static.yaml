@@ -1,0 +1,47 @@
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualDestination
+metadata:
+  name: reviews-vd
+  namespace: gloo-mesh
+spec:
+  hostname: reviews.global
+  port:
+    number: 9080
+    protocol: http
+  static:
+    destinations:
+    - kubeService:
+        name: reviews
+        namespace: default
+        clusterName: remotecluster1
+    - kubeService:
+        name: reviews
+        namespace: default
+        clusterName: remotecluster2
+  virtualMesh:
+    name: virtual-mesh
+    namespace: gloo-mesh
+---
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: TrafficPolicy
+metadata:
+  namespace: gloo-mesh
+  name: reviews-outlier
+spec:
+  destinationSelector:
+  - kubeServiceRefs:
+      services:
+        - clusterName: remotecluster1
+          name: reviews
+          namespace: default
+  - kubeServiceRefs:
+      services:
+        - clusterName: remotecluster2
+          name: reviews
+          namespace: default
+  policy:
+    outlierDetection:
+      consecutiveErrors: 1
+      maxEjectionPercent: 100
+      interval: 5s
+      baseEjectionTime: 30s

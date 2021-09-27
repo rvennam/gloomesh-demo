@@ -140,4 +140,4 @@ spec:
       pilotCertProvider: istiod
       multiCluster:
         clusterName: remotecluster3
-EOF
+EOF 
