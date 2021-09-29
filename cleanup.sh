@@ -9,3 +9,11 @@ k delete  -n gloo-mesh accesspolicy bookinfo
 k delete  -n gloo-mesh accesspolicy istio-ingressgateway
 k delete  -n gloo-mesh VirtualMesh virtual-mesh
 k delete  -n gloo-mesh AccessLogRecord --all
+
+k delete -n gloo-mesh TrafficPolicy --all
+k delete -n gloo-mesh accesspolicy --all
+k delete -n gloo-mesh virtualhost --all
+k delete -n gloo-mesh virtualgateway --all
+k delete -n gloo-mesh VirtualDestination --all
+
+k delete  -n gloo-mesh VirtualMesh --all
