@@ -16,10 +16,10 @@ export MGMT_CONTEXT=gke_us-central1-c_rvennam-mgmt
 export REMOTE_CONTEXT1=remotecluster1
 export REMOTE_CONTEXT2=remotecluster2
 
-export REPO=gcr.io/istio-release
-export ISTIO_VERSION=1.12.6
+export REPO=us-docker.pkg.dev/gloo-mesh/istio-69e5957db6d2
+export ISTIO_VERSION=1.13.4
 
-GLOO_MESH_VERSION=v2.0.0
+GLOO_MESH_VERSION=v2.0.5
 
 curl -sL https://run.solo.io/meshctl/install | GLOO_MESH_VERSION=$GLOO_MESH_VERSION sh -
 
@@ -40,12 +40,12 @@ echo $MGMT_SERVER_NETWORKING_ADDRESS
 k get secret -n gloo-mesh relay-root-tls-secret -o json | jq -r '.data["ca.crt"]' | base64 -d  > ca.crt
 grpcurl -authority gloo-mesh-mgmt-server.gloo-mesh  -cacert=ca.crt $MGMT_SERVER_NETWORKING_ADDRESS list
 
-meshctl cluster register \
-  --kubecontext=$MGMT_CONTEXT \
-  --remote-context=$MGMT_CONTEXT \
-  --relay-server-address $MGMT_SERVER_NETWORKING_ADDRESS \
-  --version $GLOO_MESH_VERSION \
-  $MGMT_CLUSTER
+# meshctl cluster register \
+#   --kubecontext=$MGMT_CONTEXT \
+#   --remote-context=$MGMT_CONTEXT \
+#   --relay-server-address $MGMT_SERVER_NETWORKING_ADDRESS \
+#   --version $GLOO_MESH_VERSION \
+#   $MGMT_CLUSTER
 
 meshctl cluster register \
   --kubecontext=$MGMT_CONTEXT \
@@ -155,6 +155,8 @@ spec:
          # Allow multiple trust domains (Required for Gloo Mesh east/west routing)
           - name: PILOT_SKIP_VALIDATE_TRUST_DOMAIN
             value: "true"
+          - name: PILOT_ENABLE_K8S_SELECT_WORKLOAD_ENTRIES
+            value: "false"
           - name: PILOT_ENABLE_K8S_SELECT_WORKLOAD_ENTRIES
             value: "false"
   values:
@@ -300,3 +302,31 @@ kubectl apply -n web-ui -f https://raw.githubusercontent.com/solo-io/workshops/g
 kubectl create namespace ops --context $MGMT_CONTEXT
 kubectl create namespace web --context $MGMT_CONTEXT
 kubectl create namespace backend-apis --context $MGMT_CONTEXT
+
+
+#!/bin/bash
+
+kubectl --context ${CLUSTER1} create namespace gloo-mesh-addons
+kubectl --context ${CLUSTER1} label namespace gloo-mesh-addons istio-injection=enabled
+
+helm repo add gloo-mesh-agent https://storage.googleapis.com/gloo-mesh-enterprise/gloo-mesh-agent
+helm repo update
+
+helm upgrade --install gloo-mesh-agent-addons gloo-mesh-agent/gloo-mesh-agent \
+  --namespace gloo-mesh-addons \
+  --kube-context=${CLUSTER1} \
+  --set glooMeshAgent.enabled=false \
+  --set rate-limiter.enabled=true \
+  --set ext-auth-service.enabled=true \
+  --version $GLOO_MESH_VERSION
+
+kubectl --context ${REMOTE_CONTEXT1} apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth
+  namespace: gloo-mesh
+type: extauth.solo.io/oauth
+data:
+  client-secret: $(echo -n 8Y9c11kPS3x2yGsdDbT3YrfYgIit7KhJ9iBcnoO8zNORyLS4x0cE98jKR1To-f-I | base64)
+EOF

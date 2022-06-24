@@ -3,6 +3,8 @@ kind: RouteTable
 metadata:
   name: frontend
   namespace: web-team
+  labels:
+    lab: failover
 spec:
   hosts:
     - '*'
@@ -14,12 +16,12 @@ spec:
   http:
     - name: frontend
       labels:
-        oauth: "true"
+        virtual-destination: frontend
       forwardTo:
         destinations:
           - ref:
               name: frontend
-              namespace: web-ui
-              cluster: cluster1
+              namespace: web-team
+            kind: VIRTUAL_DESTINATION
             port:
               number: 80

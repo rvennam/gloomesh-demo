@@ -6,5 +6,5 @@ metadata:
 spec:
   config:
     mgmtServerCa:
-      generated: {}
+      generated: {} # let Gloo Mesh handle my certs
     autoRestartPods: true
