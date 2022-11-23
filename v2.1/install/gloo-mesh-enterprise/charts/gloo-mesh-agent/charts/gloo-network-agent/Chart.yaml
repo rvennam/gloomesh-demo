@@ -1,0 +1,5 @@
+apiVersion: v1
+description: Gloo Network data plane manager and eBPF loader
+name: gloo-network-agent
+type: application
+version: 0.1.0

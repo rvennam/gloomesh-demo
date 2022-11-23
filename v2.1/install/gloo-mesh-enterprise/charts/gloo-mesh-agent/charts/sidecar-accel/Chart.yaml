@@ -1,0 +1,5 @@
+apiVersion: v2
+description: eBPF-based sidecar data-plane acceleration
+name: sidecar-accel
+type: application
+version: 0.1.0

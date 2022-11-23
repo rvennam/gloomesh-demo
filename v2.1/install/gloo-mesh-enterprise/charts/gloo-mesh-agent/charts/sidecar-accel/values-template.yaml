@@ -1,0 +1,26 @@
+fullname: sidecar-accel
+namespace: istio-system
+debug: false
+ipsFilePath: /host/ips/ips.txt
+image:
+  hub: us-docker.pkg.dev
+  repository: gloo-mesh/sidecar-accel/sidecar-accel
+  tag: %version%
+  pullPolicy: Always
+resources:
+  container:
+    limit:
+      cpu: 300m
+      memory: 200Mi
+    request:
+      cpu: 100m
+      memory: 200Mi
+  init:
+    limit:
+      cpu: 300m
+      memory: 50Mi
+    request:
+      cpu: 100m
+      memory: 50Mi
+dnsPolicy: ClusterFirst
+revisionHistoryLimit: 10

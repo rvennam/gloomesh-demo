@@ -1,0 +1,21 @@
+dependencies:
+- name: gloo-mesh-crds
+  repository: file:///home/runner/work/gloo-mesh-enterprise/gloo-mesh-enterprise/install/helm/gloo-mesh-crds
+  version: 2.2.0-beta1
+- name: rate-limiter
+  repository: https://storage.googleapis.com/rate-limiter-helm
+  version: 0.7.5
+- name: ext-auth-service
+  repository: https://storage.googleapis.com/ext-auth-service-helm
+  version: 0.28.0
+- name: sidecar-accel
+  repository: https://storage.googleapis.com/gloo-mesh-enterprise/sidecar-accel
+  version: 0.1.0
+- name: gloo-mesh-managed-installations
+  repository: file:///home/runner/work/gloo-mesh-enterprise/gloo-mesh-enterprise/install/helm/gloo-mesh-managed-installations
+  version: 2.2.0-beta1
+- name: gloo-network-agent
+  repository: https://storage.googleapis.com/gloo-mesh-enterprise/gloo-network-agent
+  version: 0.1.0
+digest: sha256:680877db7b70260397db77ce3cd4a6558a960eb94192ffc87df87c8afc585f54
+generated: "2022-11-07T21:28:12.025717128Z"

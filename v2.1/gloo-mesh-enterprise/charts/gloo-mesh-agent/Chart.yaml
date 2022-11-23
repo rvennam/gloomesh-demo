@@ -1,0 +1,29 @@
+apiVersion: v2
+dependencies:
+- name: gloo-mesh-crds
+  repository: file:///home/runner/work/gloo-mesh-enterprise/gloo-mesh-enterprise/install/helm/gloo-mesh-crds
+  version: 2.1.1
+- condition: rate-limiter.enabled
+  name: rate-limiter
+  repository: https://storage.googleapis.com/rate-limiter-helm
+  version: 0.7.5
+- condition: ext-auth-service.enabled
+  name: ext-auth-service
+  repository: https://storage.googleapis.com/ext-auth-service-helm
+  version: 0.28.0
+- condition: sidecar-accel.enabled
+  name: sidecar-accel
+  repository: https://storage.googleapis.com/gloo-mesh-enterprise/sidecar-accel
+  version: 0.1.0
+- alias: managedInstallations
+  condition: managedInstallations.enabled
+  name: gloo-mesh-managed-installations
+  repository: file:///home/runner/work/gloo-mesh-enterprise/gloo-mesh-enterprise/install/helm/gloo-mesh-managed-installations
+  version: 2.1.1
+- condition: gloo-network-agent.enabled
+  name: gloo-network-agent
+  repository: https://storage.googleapis.com/gloo-mesh-enterprise/gloo-network-agent
+  version: 0.1.0
+description: Helm chart for the Gloo Mesh Enterprise Agent.
+name: gloo-mesh-agent
+version: 2.1.1

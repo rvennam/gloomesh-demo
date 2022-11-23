@@ -1,0 +1,35 @@
+apiVersion: security.policy.gloo.solo.io/v2
+kind: ExtAuthPolicy
+metadata:
+  name: frontend
+  namespace: web-team
+spec:
+  applyToRoutes:
+    - route:
+        labels:
+          route: "frontend"
+  config:
+    glooAuth:
+      configs:
+        - oauth2:
+            oidcAuthorizationCode:
+              afterLogoutUrl: "https://34.75.183.246:443"
+              appUrl: https://34.75.183.246:443
+              callbackPath: /callback
+              clientId: LowR3GbZHu3Ycf0baBL1pXecldgpFdY6
+              clientSecretRef:
+                name: auth0-poc-developer-api-client-secret
+                namespace: web-ui
+              headers:
+                idTokenHeader: jwt
+              issuerUrl: https://dev-t9ij9mmu.us.auth0.com/
+              logoutPath: /logout
+              scopes:
+                - email
+                - openid
+                - offline_access
+                - profile
+    server:
+      cluster: mgmt-cluster
+      name: ext-auth-server
+      namespace: web-team

@@ -1,0 +1,11 @@
+{{/* The purpose of this template is to automatically register the Management plane as a  Gloo KubernetesCluster (when the agent subchart is installed) */}}
+
+{{- if $.Values.registerMgmtPlane.enabled }}
+apiVersion: admin.gloo.solo.io/v2
+kind: KubernetesCluster
+metadata:
+  name: {{ if (and $.Values.global $.Values.global.cluster) -}}{{ if $.Values.mgmtClusterName -}}{{ (eq $.Values.global.cluster "mgmt-cluster") | ternary $.Values.mgmtClusterName $.Values.global.cluster -}}{{ else -}}{{ $.Values.global.cluster -}}{{ end -}}{{ else -}}{{ $.Values.mgmtClusterName -}}{{ end }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  clusterDomain: {{ $.Values.registerMgmtPlane.clusterDomain | default "cluster.local" }}
+{{- end }}

@@ -1,0 +1,26 @@
+apiVersion: networking.gloo.solo.io/v2
+kind: RouteTable
+metadata:
+  name: frontend
+  namespace: web-team
+  labels:
+    lab: failover
+spec:
+  hosts:
+    - '*'
+  virtualGateways:
+    - name: north-south-gw
+      namespace: ops-team
+      cluster: mgmt-cluster
+  http:
+    - name: frontend
+      labels:
+        route: "frontend"
+      forwardTo:
+        destinations:
+          - ref:
+              name: frontend
+              namespace: web-team
+            kind: VIRTUAL_DESTINATION
+            port:
+              number: 80

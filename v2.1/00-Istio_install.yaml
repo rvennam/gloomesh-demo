@@ -1,0 +1,109 @@
+apiVersion: admin.gloo.solo.io/v2
+kind: IstioLifecycleManager
+metadata:
+  name: control-plane
+  namespace: gloo-mesh
+spec:
+  installations:
+    - clusters:
+      - name: cluster1
+        defaultRevision: true
+      - name: cluster2
+        defaultRevision: true
+      revision: 1-13
+      istioOperatorSpec:
+        components:
+          ingressGateways:
+            - enabled: false
+          pilot:
+            enabled: true
+        hub: us-docker.pkg.dev/gloo-mesh/istio-workshops
+        tag: "1.13.8-solo"
+        profile: minimal
+        meshConfig:
+          h2UpgradePolicy: UPGRADE
+          # enable access logging to standard output
+          accessLogFile: /dev/stdout
+          defaultConfig:
+            envoyMetricsService:
+              address: gloo-mesh-agent.gloo-mesh:9977
+            # enable GlooMesh accesslog service (required for Gloo Mesh Access Logging)
+            envoyAccessLogService:
+              address: gloo-mesh-agent.gloo-mesh:9977
+            proxyMetadata:
+              ISTIO_META_DNS_CAPTURE: "true"
+              ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+            proxyStatsMatcher:
+              inclusionPrefixes:
+                - http
+          enableAutoMtls: true
+        values:
+          global:
+            pilotCertProvider: istiod
+---
+apiVersion: admin.gloo.solo.io/v2
+kind: GatewayLifecycleManager
+metadata:
+  name: istio-ingressgateway
+  namespace: gloo-mesh
+spec:
+  installations:
+    - clusters:
+      - name: cluster1
+      - name: cluster2
+      gatewayRevision: 1-13
+      istioOperatorSpec:
+        components:
+          ingressGateways:
+            - enabled: true
+              k8s:
+                env:
+                  - name: ISTIO_META_ROUTER_MODE
+                    value: sni-dnat
+                service:
+                  ports:
+                    - name: http2
+                      port: 80
+                      protocol: TCP
+                      targetPort: 8080
+                    - name: https
+                      port: 443
+                      protocol: TCP
+                      targetPort: 8443
+                  selector:
+                    app: istio-ingressgateway
+                    istio: ingressgateway
+                    traffic: north-south
+                  type: LoadBalancer
+              label:
+                istio: ingressgateway
+                traffic: north-south
+              name: istio-ingressgateway
+              namespace: istio-gateways
+            - name: istio-eastwestgateway
+              enabled: true
+              namespace: istio-gateways
+              label:
+                istio: eastwestgateway
+              k8s:
+                env:
+                  # Required by Gloo Mesh for east/west routing
+                  - name: ISTIO_META_ROUTER_MODE
+                    value: "sni-dnat"
+                service:
+                  type: LoadBalancer
+                  selector:
+                    istio: eastwestgateway
+                  # Default ports
+                  ports:
+                    # Port for multicluster mTLS passthrough; required for Gloo Mesh east/west routing
+                    - port: 15443
+                      targetPort: 15443
+                      # Gloo Mesh looks for this default name 'tls' on a gateway
+                      name: tls
+        hub: us-docker.pkg.dev/gloo-mesh/istio-workshops
+        tag: "1.13.8-solo"
+        profile: empty
+        values:
+          global:
+            pilotCertProvider: istiod

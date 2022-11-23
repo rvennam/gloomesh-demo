@@ -1,0 +1,26 @@
+{{- if not .Values.licenseSecretName }}
+{{- $productLicenseProvided := or (or .Values.glooMeshLicenseKey .Values.glooNetworkLicenseKey) .Values.glooGatewayLicenseKey}}
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: license-keys
+  namespace: {{ .Release.Namespace }}
+data:
+  gloo-mesh-license-key: {{ .Values.glooMeshLicenseKey | b64enc | quote }}
+  gloo-network-license-key: {{ .Values.glooNetworkLicenseKey | b64enc | quote }}
+  gloo-gateway-license-key: {{ .Values.glooGatewayLicenseKey | b64enc | quote }}
+  gloo-trial-license-key: {{ .Values.glooTrialLicenseKey | b64enc | quote }}
+---
+{{- if not $productLicenseProvided }}
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: gloo-mesh-enterprise-license
+  namespace: {{ .Release.Namespace }}
+data:
+  key: {{ required "A Gloo Mesh Enterprise license key is required" .Values.licenseKey | b64enc | quote }}
+---
+{{- end }}
+{{- end }}

@@ -1,0 +1,12 @@
+dependencies:
+- name: gloo-mesh-crds
+  repository: file:///home/runner/work/gloo-mesh-enterprise/gloo-mesh-enterprise/install/helm/gloo-mesh-crds
+  version: 2.1.1
+- name: gloo-mesh-agent
+  repository: file:///home/runner/work/gloo-mesh-enterprise/gloo-mesh-enterprise/install/helm/gloo-mesh-agent
+  version: 2.1.1
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 15.12.2
+digest: sha256:f1c3a1a7d7926633df0f8c2ce72b34a63f830585d04ec66cc976848471fc632a
+generated: "2022-11-22T21:14:33.017017451Z"

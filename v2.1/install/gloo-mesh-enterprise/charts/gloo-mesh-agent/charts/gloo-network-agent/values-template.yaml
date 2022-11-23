@@ -1,0 +1,26 @@
+fullname: gloo-network-agent
+ciliumTCPath: /sys/fs/bpf/tc/globals
+# namespace to install gloo-network-agent in. Defaults to helm release namespace.
+namespace: ""
+debug: false
+image:
+  hub: us-docker.pkg.dev
+  repository: gloo-mesh/%repo-dir%/gloo-network-agent
+  tag: %version%
+  pullPolicy: Always
+resources:
+  container:
+    limit:
+      cpu: 300m
+      memory: 200Mi
+    request:
+      cpu: 100m
+      memory: 200Mi
+  init:
+    limit:
+      cpu: 300m
+      memory: 50Mi
+    request:
+      cpu: 100m
+      memory: 50Mi
+revisionHistoryLimit: 10
