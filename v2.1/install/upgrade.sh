@@ -1,7 +1,7 @@
 rm -rf ./gloo-mesh-agent
 rm -rf ./gloo-mesh-enterprise
 
-export UPGRADE_VERSION=2.2.0-beta1
+export UPGRADE_VERSION=2.2.0-rc2
 export MGMT_CONTEXT=mgmt
 export REMOTE_CONTEXT1=cluster1
 export REMOTE_CONTEXT2=cluster2
@@ -38,15 +38,17 @@ sleep 3
 helm upgrade gloo-mesh-agent gloo-mesh-agent/gloo-mesh-agent \
 --kube-context=${REMOTE_CONTEXT1} \
 --namespace gloo-mesh \
---version ${UPGRADE_VERSION}
+--version ${UPGRADE_VERSION} \
+--set relay.serverAddress=34.72.119.143:9900
 
 sleep 3
 helm upgrade gloo-mesh-agent gloo-mesh-agent/gloo-mesh-agent \
 --kube-context=${REMOTE_CONTEXT2} \
 --namespace gloo-mesh \
---version ${UPGRADE_VERSION}
+--version ${UPGRADE_VERSION} \
+--set relay.serverAddress=34.72.119.143:9900
 
-sleep 3:pods:
+sleep 3
 helm upgrade --install gloo-mesh-agent-addons gloo-mesh-agent/gloo-mesh-agent \
   --namespace gloo-mesh-addons \
   --kube-context=${REMOTE_CONTEXT1} \
