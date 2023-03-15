@@ -1,0 +1,15 @@
+apiVersion: networking.gloo.solo.io/v2
+kind: VirtualDestination
+metadata:
+  name: echo-server
+spec:
+  hosts:
+  - echo-server.debug
+  services:
+  - labels:
+      app: echo-server
+  ports:
+  - number: 80
+    protocol: HTTP
+    targetPort:
+      name: http-port

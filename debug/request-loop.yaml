@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: request-loop
+  labels:
+    app: request-loop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: request-loop
+  template:
+    metadata:
+      labels:
+        app: request-loop
+    spec:
+      containers:
+      - name: request-loop
+        image: rvennam/request-loop:latest
+        ports:
+        - containerPort: 8080
+        imagePullPolicy: Always
+        env:
+        - name: URL
+          value: http://echo-server.debug/
+        - name: INTERVAL
+          value: "5000"
