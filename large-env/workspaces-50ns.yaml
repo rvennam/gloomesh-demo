@@ -1,0 +1,85 @@
+apiVersion: admin.gloo.solo.io/v2
+kind: Workspace
+metadata:
+  name: scale-test
+  namespace: gloo-mesh
+spec:
+  workloadClusters:
+  - name: 'mgmt-cluster'
+    namespaces:
+    - name: scale-test
+  - name: '*'
+    namespaces:
+    - name: ns1
+    - name: ns2
+    - name: ns3
+    - name: ns4
+    - name: ns5
+    - name: ns6
+    - name: ns7
+    - name: ns8
+    - name: ns9
+    - name: ns10
+    - name: ns11
+    - name: ns12
+    - name: ns13
+    - name: ns14
+    - name: ns15
+    - name: ns16
+    - name: ns17
+    - name: ns18
+    - name: ns19
+    - name: ns20
+    - name: ns21
+    - name: ns22
+    - name: ns23
+    - name: ns24
+    - name: ns25
+    - name: ns26
+    - name: ns27
+    - name: ns28
+    - name: ns29
+    - name: ns30
+    - name: ns31
+    - name: ns32
+    - name: ns33
+    - name: ns34
+    - name: ns35
+    - name: ns36
+    - name: ns37
+    - name: ns38
+    - name: ns39
+    - name: ns40
+    - name: ns41
+    - name: ns42
+    - name: ns43
+    - name: ns44
+    - name: ns45
+    - name: ns46
+    - name: ns47
+    - name: ns48
+    - name: ns49
+    - name: ns50
+---
+apiVersion: admin.gloo.solo.io/v2
+kind: WorkspaceSettings
+metadata:
+  name: scale-test
+  namespace: scale-test
+spec:
+  exportTo:
+  - workspaces:
+    - name: ops-team
+  options:
+    eastWestGateways:
+    - selector:
+        labels:
+          istio: eastwestgateway
+    federation:
+      enabled: false
+      serviceSelector:
+      - {}
+    # disabled to show how to use Auth Policies
+    serviceIsolation:
+      enabled: false
+      trimProxyConfig: false

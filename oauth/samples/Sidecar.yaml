@@ -1,0 +1,82 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: scope-admon
+  namespace: default
+spec:
+  egress:
+  - hosts:
+    - "~/*"
+    - "istio-system/*"
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: scope-details
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: sleep
+  egress:
+  - hosts:
+    - "./*"
+    - "istio-system/*"
+    - "*/www.google.com"
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-svc-google
+  namespace : default
+spec:
+  hosts:
+  - httpbin.org
+  exportTo:
+  - "."
+  location: MESH_EXTERNAL
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: my-wiki-rule
+spec:
+  hosts:
+  - httpbin.org
+  http:
+  - route:
+    - destination:
+        host: solo.io
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: scope-admon
+  namespace: admon
+spec:
+  egress:
+  - hosts:
+    - "~/*"
+    - "istio-system/*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: scope-details
+  namespace: admon
+spec:
+  workloadSelector:
+    labels:
+      app: details
+  egress:
+  - hosts:
+    - "./*"
+    - "istio-system/*"
+    - "*/www.google.com"

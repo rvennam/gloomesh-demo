@@ -1,0 +1,17 @@
+apiVersion: admin.gloo.solo.io/v2
+kind: IstioLifecycleManager
+metadata:
+  name: control-plane
+  namespace: gloo-mesh
+spec:
+  installations:
+    - clusters:
+      - name: cluster1
+        defaultRevision: true
+      - name: cluster2
+        defaultRevision: true
+      revision: 1-20
+      istioOperatorSpec:
+        hub: us-docker.pkg.dev/gloo-mesh/istio-workshops
+        tag: "1.20.1-solo"
+        profile: minimal

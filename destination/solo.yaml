@@ -1,0 +1,43 @@
+apiVersion: discovery.mesh.gloo.solo.io/v1
+kind: Destination
+metadata:
+  name: my-ext-service-tt
+  namespace: gloo-mesh
+spec:
+  externalService:
+    endpoints:
+    - address: solo.io
+      ports:
+        https: 443
+    hosts:
+      - www.solo.io
+      - solo.io
+    name: solo.io
+    ports:
+      - name: https
+        number: 443
+        protocol: https
+    exportTo:
+    - namespaces:
+      - default
+---
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: ServiceDependency
+metadata:
+  name: test-sidecar-matcher
+  namespace: gloo-mesh
+spec:
+  sourceSelectors:
+  - kubeWorkloadMatcher:
+      labels:
+        app: productpage
+      namespaces:
+      - default
+  destinationSelectors:
+  - kubeServiceMatcher:
+      namespaces:
+      - default
+  - externalServiceRefs:
+      externalServices:
+      - name: my-ext-service-tt
+        namespace: gloo-mesh

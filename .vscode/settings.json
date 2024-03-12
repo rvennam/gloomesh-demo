@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "kubernetes://schema/networking.mesh.gloo.solo.io/v1@virtualmesh": "file:///Users/ramvennam/dev/gloomesh/demo/1-virtualmesh.yaml"
+    }
+}

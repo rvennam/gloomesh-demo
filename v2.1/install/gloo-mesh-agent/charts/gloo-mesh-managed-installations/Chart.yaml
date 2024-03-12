@@ -1,6 +1,0 @@
-apiVersion: v2
-description: Helm chart for setting up managed installations of Istio control planes
-  and gateways in workload clusters. Can be installed alongside the agent as a subchart
-  or deployed independently.
-name: gloo-mesh-managed-installations
-version: 2.1.0

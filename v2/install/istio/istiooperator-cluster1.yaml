@@ -1,17 +1,19 @@
-# istioctl install --set hub=$ISTIO_IMAGE_REPO --set tag=$ISTIO_IMAGE_TAG  -y --context $CLUSTER1 -f install/istio/istiooperator-cluster1.yaml
+# k create ns istio-system
+# k create ns istio-gateways
+# istioctl install -f ./istiooperator-cluster1.yaml
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 metadata:
   name: gloo-mesh-istio
   namespace: istio-system
 spec:
-  # only the control plane components are installed (https://istio.io/latest/docs/setup/additional-setup/config-profiles/)
+  # Start with just the basic control plane, customize and add gateways
   profile: minimal
 
   meshConfig:
     # enable access logging to standard output
     accessLogFile: /dev/stdout
-
+    accessLogEncoding: JSON
     defaultConfig:
       # wait for the istio-proxy to start before application pods
       holdApplicationUntilProxyStarts: true
@@ -83,6 +85,7 @@ spec:
          # Allow multiple trust domains (Required for Gloo Mesh east/west routing)
           - name: PILOT_SKIP_VALIDATE_TRUST_DOMAIN
             value: "true"
+        # disable associating workload entries with kube services
           - name: PILOT_ENABLE_K8S_SELECT_WORKLOAD_ENTRIES
             value: "false"
   values:

@@ -19,6 +19,9 @@ spec:
   - name: http
     port: 80
     targetPort: 8080
+  - name: http-second
+    port: 8080
+    targetPort: 8080
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -69,7 +72,7 @@ spec:
       serviceAccountName: frontend
       containers:
         - name: server
-          image: gcr.io/solo-test-236622/frontend:solo-build
+          image: gcr.io/solo-test-236622/frontend:1.2-solo
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

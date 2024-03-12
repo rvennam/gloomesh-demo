@@ -6,3 +6,5 @@ k config rename-context gke_solo-test-236622_us-east1-b_rvennam-remote1 cluster1
 
 gcloud container clusters get-credentials rvennam-remote3 --zone us-west1-c --project solo-test-236622
 k config rename-context gke_solo-test-236622_us-west1-c_rvennam-remote3 cluster2
+
+k config use-context mgmt

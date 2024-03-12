@@ -1,3 +1,4 @@
+# Workspace for Ops Team
 apiVersion: admin.gloo.solo.io/v2
 kind: Workspace
 metadata:
@@ -5,14 +6,15 @@ metadata:
   namespace: gloo-mesh
 spec:
   workloadClusters:
-  - name: 'mgmt'
+  - name: 'mgmt-cluster'
     namespaces:
-    - name: ops-team
+    - name: ops-team # Ops team store their config here
   - name: '*'
     namespaces:
-    - name: istio-gateways
-    - name: gloo-mesh-addons
+    - name: istio-gateways # Gateways are owned by the ops team
+    - name: gloo-mesh-addons # Ext-Auth and Rate Limit pods are owned by the ops team
 ---
+# Workspace for Web Team
 apiVersion: admin.gloo.solo.io/v2
 kind: Workspace
 metadata:
@@ -20,13 +22,14 @@ metadata:
   namespace: gloo-mesh
 spec:
   workloadClusters:
-  - name: 'mgmt'
+  - name: 'mgmt-cluster'
     namespaces:
     - name: web-team
   - name: '*'
     namespaces:
     - name: web-ui
 ---
+# Workspace for Backend Team
 apiVersion: admin.gloo.solo.io/v2
 kind: Workspace
 metadata:
@@ -34,13 +37,17 @@ metadata:
   namespace: gloo-mesh
 spec:
   workloadClusters:
-  - name: 'mgmt'
+  - name: 'mgmt-cluster'
     namespaces:
     - name: backend-apis-team
   - name: '*'
     namespaces:
     - name: backend-apis
 ---
+#
+#
+#
+#
 # import the gloo-mesh-addons services into the other workspaces
 apiVersion: admin.gloo.solo.io/v2
 kind: WorkspaceSettings
@@ -56,21 +63,17 @@ spec:
     - name: "*"
     resources:
     - kind: SERVICE
-      namespace: gloo-mesh-addons
+      namespace: gloo-mesh-addons # Other teams need access to rate-limit and ext-auth
     - kind: VIRTUAL_DESTINATION
       namespace: gloo-mesh-addons
   options:
-    federation:
-      enabled: true
-      serviceSelector:
-      - namespace: gloo-mesh-addons
     eastWestGateways:
     - selector:
         labels:
           istio: eastwestgateway
     serviceIsolation:
-      enabled: true
-      trimProxyConfig: true
+      enabled: false
+      trimProxyConfig: false
 ---
 apiVersion: admin.gloo.solo.io/v2
 kind: WorkspaceSettings
@@ -82,7 +85,7 @@ spec:
   - workspaces:
     - name: backend-apis-team
   - workspaces:
-    - name: ops-team
+    - name: ops-team # rate-limit and ext-auth
   exportTo:
   - workspaces:
     - name: ops-team
@@ -91,13 +94,9 @@ spec:
     - selector:
         labels:
           istio: eastwestgateway
-    federation:
-      enabled: true
-      serviceSelector:
-      - namespace: web-ui
     serviceIsolation:
-      enabled: true
-      trimProxyConfig: true
+      enabled: false # AuthorizationPolicies
+      trimProxyConfig: false # Sidecar
 ---
 apiVersion: admin.gloo.solo.io/v2
 kind: WorkspaceSettings
@@ -116,11 +115,7 @@ spec:
     - selector:
         labels:
           istio: eastwestgateway
-    federation:
-      enabled: true
-      serviceSelector:
-      - namespace: backend-apis
     # disabled to show how to use Auth Policies
     serviceIsolation:
-      enabled: true
+      enabled: false
       trimProxyConfig: false

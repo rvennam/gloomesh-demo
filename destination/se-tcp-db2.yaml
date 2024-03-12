@@ -1,0 +1,25 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: db1
+spec:
+  hosts:
+  - dynamodb.us-east-1.amazonaws.com
+  ports:
+  - name: mysql
+    number: 3306
+    protocol: TCP
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: db2
+spec:
+  hosts:
+  - dynamodb.us-west-1.amazonaws.com
+  ports:
+  - name: mysql
+    number: 3306
+    protocol: TCP
+  resolution: DNS

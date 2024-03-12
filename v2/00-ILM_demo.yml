@@ -1,0 +1,42 @@
+apiVersion: admin.gloo.solo.io/v2
+kind: IstioLifecycleManager
+metadata:
+  name: control-plane
+  namespace: gloo-mesh
+spec:
+  installations:
+    - clusters:
+      - name: cluster1
+        defaultRevision: false
+      - name: cluster2
+        defaultRevision: false
+      revision: 1-20
+      istioOperatorSpec:
+        components:
+          ingressGateways:
+            - enabled: false
+          pilot:
+            enabled: true
+        hub: us-docker.pkg.dev/gloo-mesh/istio-workshops
+        tag: "1.20.2-solo"
+        profile: minimal
+---
+apiVersion: admin.gloo.solo.io/v2
+kind: GatewayLifecycleManager
+metadata:
+  name: istio-ingressgateway
+  namespace: gloo-mesh
+spec:
+  installations:
+    - clusters:
+      - name: cluster1
+      - name: cluster2
+      gatewayRevision: 1-20
+      istioOperatorSpec:
+        components:
+          ingressGateways:
+            - enabled: true
+        hub: us-docker.pkg.dev/gloo-mesh/istio-workshops
+        tag: "1.20.2-solo"
+        profile: empty
+        

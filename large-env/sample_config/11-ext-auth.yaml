@@ -1,0 +1,35 @@
+apiVersion: security.policy.gloo.solo.io/v2
+kind: ExtAuthPolicy
+metadata:
+  name: frontend
+  namespace: web-team
+spec:
+  applyToRoutes:
+    - route:
+        labels:
+          route: "frontend"
+  config:
+    glooAuth:
+      configs:
+        - oauth2:
+            oidcAuthorizationCode:
+              afterLogoutUrl: "https://dev-t9ij9mmu.us.auth0.com/v2/logout?client_id=LowR3GbZHu3Ycf0baBL1pXecldgpFdY6&returnTo=https%3A%2F%2Fwww.shipt.com"
+              appUrl: https://35.196.98.64:443
+              callbackPath: /callback
+              clientId: LowR3GbZHu3Ycf0baBL1pXecldgpFdY6
+              clientSecretRef:
+                name: auth0-poc-developer-api-client-secret
+                namespace: web-ui
+              headers:
+                idTokenHeader: jwt
+              issuerUrl: https://dev-t9ij9mmu.us.auth0.com/
+              logoutPath: /auth0-poc/logout
+              scopes:
+                - email
+                - openid
+                - offline_access
+                - profile
+    server:
+      cluster: mgmt-cluster
+      name: ext-auth-server
+      namespace: web-team

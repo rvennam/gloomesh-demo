@@ -1,0 +1,75 @@
+apiVersion: security.policy.gloo.solo.io/v2
+kind: JWTPolicy
+metadata:
+  name: auth0-poc
+  namespace: gateway
+spec:
+  applyToRoutes:
+    - route:
+        labels:
+          auth0-poc-developer-api: "true"
+  config:
+    phase:
+      postAuthz:
+        priority: 1
+    providers:
+      auth0:
+        issuer: https://gloomeshpoc.us.auth0.com/
+        tokenSource:
+          headers:
+            - name: jwt
+        remote:
+          url: http://gloomeshpoc.us.auth0.com/.well-known/jwks.json
+          destinationRef:
+            kind: EXTERNAL_SERVICE
+            port:
+              number: 80
+            ref:
+              name: auth0-poc
+              namespace: gateway
+              cluster: gloo-mgmt-dev-uc1-gke
+          enableAsyncFetch: true
+        claimsToHeaders:
+        - claim: email
+          header: X-Email
+        - claim: nickname
+          header: X-Nickname
+        - claim: https://www.shipt.com/shipt_metadata
+          header: X-Custom-Metadata
+---
+apiVersion: networking.gloo.solo.io/v2
+kind: ExternalService
+metadata:
+  labels:
+    expose: "true"
+  name: auth0-poc
+  namespace: gateway
+spec:
+  hosts:
+    - gloomeshpoc.us.auth0.global
+  ports:
+    - name: http
+      number: 80
+      protocol: HTTP
+      targetPort:
+        number: 443
+      clientsideTls: { }
+    - name: https
+      number: 443
+      protocol: HTTPS
+  selector:
+    external-endpoint: auth0-poc
+---
+# externalendpoint.yaml applied to mgmt cluster
+apiVersion: networking.gloo.solo.io/v2
+kind: ExternalEndpoint
+metadata:
+  name: auth0-poc
+  namespace: ops-team
+  labels:
+    external-endpoint: auth0-poc
+spec:
+  address: gloomeshpoc.us.auth0.com
+  ports:
+    - name: https
+      number: 443

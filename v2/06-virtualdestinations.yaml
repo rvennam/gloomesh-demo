@@ -1,3 +1,24 @@
+# Global Destination for shipping 
+# shipping.backend-apis-team.solo-io.mesh
+apiVersion: networking.gloo.solo.io/v2
+kind: VirtualDestination
+metadata:
+  name: shipping
+  namespace: backend-apis-team
+spec:
+  hosts:
+  - shipping.backend-apis-team.solo-io.mesh
+  services:
+  - labels:
+      app: shippingservice
+  ports:
+  - number: 80
+    protocol: GRPC
+    targetPort:
+      name: grpc
+---
+# Global Destination for checkout 
+# checkout.backend-apis-team.solo-io.mesh
 apiVersion: networking.gloo.solo.io/v2
 kind: VirtualDestination
 metadata:
@@ -43,23 +64,6 @@ spec:
   services:
   - labels:
       app: productcatalogservice
-  ports:
-  - number: 80
-    protocol: GRPC
-    targetPort:
-      name: grpc
----
-apiVersion: networking.gloo.solo.io/v2
-kind: VirtualDestination
-metadata:
-  name: shipping
-  namespace: backend-apis-team
-spec:
-  hosts:
-  - shipping.backend-apis-team.solo-io.mesh
-  services:
-  - labels:
-      app: shippingservice
   ports:
   - number: 80
     protocol: GRPC
@@ -117,6 +121,8 @@ spec:
     targetPort:
       name: grpc
 ---
+# Global Destination for frontend 
+# frontend.web-ui-team.solo-io.mesh
 apiVersion: networking.gloo.solo.io/v2
 kind: VirtualDestination
 metadata:
@@ -130,6 +136,6 @@ spec:
       app: frontend
   ports:
   - number: 80
-    protocol: GRPC
+    protocol: HTTP
     targetPort:
       name: http

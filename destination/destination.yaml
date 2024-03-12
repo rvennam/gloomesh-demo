@@ -6,16 +6,43 @@ metadata:
 spec:
   externalService:
     endpoints:
-    - address: cnn.org
+    - address: httpbin.org
       ports:
         http: 80
     hosts:
-      - cnn.org
-    name: cnn
+      - httpbin.org
+    name: httpbin
     ports:
       - name: http
         number: 80
         protocol: http
+    exportTo:
+    - namespaces:
+      - bookinfo
+      - default
+
+---
+apiVersion: discovery.mesh.gloo.solo.io/v1
+kind: Destination
+metadata:
+  name: my-ext-service-tt2
+  namespace: gloo-mesh
+spec:
+  externalService:
+    endpoints:
+    - address: books.com
+      ports:
+        http: 80
+    hosts:
+      - books.com
+    name: books
+    ports:
+      - name: http
+        number: 80
+        protocol: http
+    exportTo:
+    - namespaces:
+      - default
 ---
 apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
 kind: ServiceDependency
@@ -34,8 +61,112 @@ spec:
       externalServices:
       - name: my-ext-service-tt
         namespace: gloo-mesh
-  - kubeServiceRefs:
-      services:
-      - name: reviews
-        namespace: default
-        clusterName: remotecluster2
+      - name: my-ext-service-tt2
+        namespace: gloo-mesh
+---
+apiVersion: discovery.mesh.gloo.solo.io/v1
+kind: Destination
+metadata:
+  name: my-ext-service-tt
+  namespace: gloo-mesh
+spec:
+  externalService:
+    endpoints:
+    - address: httpbin.org
+      ports:
+        http: 80
+    hosts:
+      - httpbin.org
+    name: httpbin
+    ports:
+      - name: http
+        number: 80
+        protocol: http
+---
+apiVersion: discovery.mesh.gloo.solo.io/v1
+kind: Destination
+metadata:
+  name: my-ext-service-tt2
+  namespace: gloo-mesh
+spec:
+  externalService:
+    endpoints:
+    - address: cnn.org
+      ports:
+        http: 80
+    hosts:
+      - cnn.org
+    name: cnn
+    ports:
+      - name: http
+        number: 80
+        protocol: http
+---
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: ServiceDependency
+metadata:
+  name: test-sidecar-matcher
+  namespace: gloo-mesh
+spec:
+  sourceSelectors:
+  - kubeWorkloadMatcher:
+      labels:
+        app: productpage
+      namespaces:
+      - default
+  destinationSelectors:
+  - kubeServiceMatcher:
+      namespaces:
+      - default
+  - externalServiceRefs:
+      externalServices:
+      - name: my-ext-service-tt
+        namespace: gloo-mesh
+      - name: my-ext-service-tt2
+        namespace: gloo-mesh
+---
+apiVersion: discovery.mesh.gloo.solo.io/v1
+kind: Destination
+metadata:
+  name: my-ext-service-dynamo
+  namespace: gloo-mesh
+spec:
+  externalService:
+    hosts:
+      - dynamodb.us-west-1.amazonaws.com
+    name: dynamodb
+    ports:
+      - name: mysql
+        number: 3306
+        protocol: TCP
+---
+apiVersion: discovery.mesh.gloo.solo.io/v1
+kind: Destination
+metadata:
+  name: my-ext-service-dropbox
+  namespace: gloo-mesh
+spec:
+  externalService:
+    hosts:
+      - api.dropboxapi.com
+    name: dropbox
+    ports:
+      - name: https
+        number: 443
+        protocol: HTTPS
+---
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: TrafficPolicy
+metadata:
+  namespace: gloo-mesh
+  name: remove-header
+spec:
+  destinationSelector:
+  - externalServiceRefs:
+      externalServices:
+      - name: my-ext-service-tt
+        namespace: gloo-mesh
+  policy:
+    headerManipulation:
+      removeRequestHeaders:
+      - "bad"

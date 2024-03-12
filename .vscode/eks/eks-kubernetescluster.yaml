@@ -1,0 +1,28 @@
+apiVersion: multicluster.solo.io/v1alpha1
+kind: KubernetesCluster
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"multicluster.solo.io/v1alpha1","kind":"KubernetesCluster","metadata":{"annotations":{},"name":"ekscluster1","namespace":"gloo-mesh"},"spec":{"clusterDomain":"cluster.local"}}
+  creationTimestamp: "2022-01-18T20:36:52Z"
+  generation: 1
+  managedFields:
+  - apiVersion: multicluster.solo.io/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:kubectl.kubernetes.io/last-applied-configuration: {}
+      f:spec:
+        .: {}
+        f:clusterDomain: {}
+    manager: kubectl-client-side-apply
+    operation: Update
+    time: "2022-01-18T20:36:52Z"
+  name: ekscluster1
+  namespace: gloo-mesh
+  resourceVersion: "90600977"
+  uid: 93fe7edc-ebfd-4673-a0af-479c3b10644e
+spec:
+  clusterDomain: cluster.local

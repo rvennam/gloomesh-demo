@@ -1,0 +1,55 @@
+apiVersion: networking.gloo.solo.io/v2
+kind: RouteTable
+metadata:
+  name: httpbin
+  namespace: echo-app
+spec:
+  hosts:
+    # override calls to the kube dns name
+    - 'httpbin.httpbin-api.svc.cluster.local'
+  workloadSelectors:
+  - selector:
+      # applies to all workloads in the echo-app workspace
+      workspace: echo-app
+  http:
+    # If you see the green header always go to green endpoints
+    - name: httpbin-green
+      matchers:
+      - headers:
+        - name: blue-green
+          value: green
+      forwardTo:
+        destinations:
+          - kind: VIRTUAL_DESTINATION
+            ref:
+              name: httpbin
+              namespace: echo-app
+              cluster: mgmt-cluster
+            subset:
+              blue-green: green
+    # If you see the blue header always go to blue endpoints
+    - name: httpbin-blue
+      matchers:
+      - headers:
+        - name: blue-green
+          value: blue
+      forwardTo:
+        destinations:
+          - kind: VIRTUAL_DESTINATION
+            ref:
+              name: httpbin
+              namespace: echo-app
+              cluster: mgmt-cluster
+            subset:
+              blue-green: blue
+    ## Where normal traffic should go
+    - name: httpbin-default
+      forwardTo:
+        destinations:
+          - kind: VIRTUAL_DESTINATION
+            ref:
+              name: httpbin
+              namespace: echo-app
+              cluster: mgmt-cluster
+            subset:
+              blue-green: blue

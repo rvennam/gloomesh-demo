@@ -23,7 +23,19 @@ kubectl delete deploy reviews-v2 --context $CLUSTER1
 kubectl delete TrafficPolicy simple-cluster1
 
 ---
+# Istio Lifecycle
 
+## Cleanup
+k delete -n gloo-mesh IstioInstallation --all
+istioctl x uninstall --purge
+
+# install.yaml
+k rollout restart deploy
+
+
+
+
+---
 # Multiple clusters
 
 # Diagram
@@ -52,6 +64,7 @@ accesspolicy-ingress-productpage.yaml
 
 # Traffic Policies and Access Policies
 4-trafficpolicy-multi-cluster.yaml
+k delete trafficpolicy reviews-tp
 
 # Failover
 Zones
@@ -61,11 +74,13 @@ reviews-failover.yaml
 kubectl patch deploy reviews-v1 --patch '{"spec": {"template": {"spec": {"containers": [{"name": "reviews","command": ["sleep", "20h"]}]}}}}'
 kubectl patch deploy reviews-v2 --patch '{"spec": {"template": {"spec": {"containers": [{"name": "reviews","command": ["sleep", "20h"]}]}}}}'
 
+kubectl patch deploy reviews-v3 --patch '{"spec": {"template": {"spec": {"containers": [{"name": "reviews","command": ["sleep", "20h"]}]}}}}'
+
 
 # Fix reviews-v1
 kubectl patch deployment reviews-v1  --type json   -p '[{"op": "remove", "path": "/spec/template/spec/containers/0/command"}]'
 kubectl patch deployment reviews-v2  --type json   -p '[{"op": "remove", "path": "/spec/template/spec/containers/0/command"}]'
-
+kubectl patch deployment reviews-v3  --type json   -p '[{"op": "remove", "path": "/spec/template/spec/containers/0/command"}]'
 
 # Prometheus
 kubectl -n gloo-mesh port-forward deploy/prometheus-server 9090
@@ -83,6 +98,3 @@ sum(
 # Access Log
 kubectl apply -f logging/accesslog-reviews.yaml
 
-# Access Log
-kubectl -n gloo-mesh  port-forward deploy/enterprise-networking 8080 &
-curl -XPOST 'localhost:8080/v0/observability/logs?pretty' | jq

@@ -13,7 +13,3 @@ spec:
     - http: {}
       port:
         name: http2
-      allowedRouteTables:
-        - host: '*'
-          selector:
-            workspace: web-team

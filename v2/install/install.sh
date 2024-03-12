@@ -1,25 +1,25 @@
 
-gcloud container clusters get-credentials rvennam-gm2-mgmt --zone us-central1-c --project solo-test-236622
-k config rename-context gke_solo-test-236622_us-central1-c_rvennam-gm2-mgmt rvennam-gm2-mgmt
+gcloud container clusters get-credentials rvennam-mgmt --zone us-central1-c --project solo-test-236622
+k config rename-context gke_solo-test-236622_us-central1-c_rvennam-mgmt mgmt
 
-gcloud container clusters get-credentials rvennam-gm2-remote1 --zone us-east1-b --project solo-test-236622
-k config rename-context gke_solo-test-236622_us-east1-b_rvennam-gm2-remote1 rvennam-gm2-remote1
+gcloud container clusters get-credentials rvennam-remote1-clone-1 --zone us-east1-b --project solo-test-236622
+k config rename-context gke_solo-test-236622_us-east1-b_rvennam-remote1-clone-1 cluster1
 
 gcloud container clusters get-credentials rvennam-gm2-remote2 --zone us-west1-c --project solo-test-236622
-k config rename-context gke_solo-test-236622_us-west1-c_rvennam-gm2-remote2 rvennam-gm2-remote2
+k config rename-context gke_solo-test-236622_us-west1-c_rvennam-remote3 cluster2
 
 export MGMT_CLUSTER=mgmt
 export REMOTE_CLUSTER1=cluster1
 export REMOTE_CLUSTER2=cluster2
 
-export MGMT_CONTEXT=gke_us-central1-c_rvennam-mgmt
-export REMOTE_CONTEXT1=remotecluster1
-export REMOTE_CONTEXT2=remotecluster2
+export MGMT_CONTEXT=mgmt
+export REMOTE_CONTEXT1=cluster1
+export REMOTE_CONTEXT2=cluster2
 
-export REPO=us-docker.pkg.dev/gloo-mesh/istio-69e5957db6d2
-export ISTIO_VERSION=1.13.4
-
-GLOO_MESH_VERSION=v2.0.5
+export ISTIO_IMAGE_REPO=us-docker.pkg.dev/gloo-mesh/istio-workshops
+export ISTIO_IMAGE_TAG=1.16.2-solo
+export ISTIO_VERSION=1.16.2
+export GLOO_MESH_VERSION=v2.3.15
 
 curl -sL https://run.solo.io/meshctl/install | GLOO_MESH_VERSION=$GLOO_MESH_VERSION sh -
 
@@ -75,9 +75,9 @@ spec:
   # only the control plane components are installed (https://istio.io/latest/docs/setup/additional-setup/config-profiles/)
   profile: minimal
   # Solo.io Istio distribution repository
-  hub: $REPO
+  hub: $ISTIO_IMAGE_REPO
   # Solo.io Gloo Mesh Istio tag
-  tag: ${ISTIO_VERSION}
+  tag: ${ISTIO_IMAGE_TAG}
 
   meshConfig:
     # enable access logging to standard output
@@ -185,9 +185,9 @@ spec:
   # only the control plane components are installed (https://istio.io/latest/docs/setup/additional-setup/config-profiles/)
   profile: minimal
   # Solo.io Istio distribution repository
-  hub: $REPO
+  hub: $ISTIO_IMAGE_REPO
   # Solo.io Gloo Mesh Istio tag
-  tag: ${ISTIO_VERSION}
+  tag: ${ISTIO_IMAGE_TAG}
 
   meshConfig:
     # enable access logging to standard output
@@ -293,15 +293,16 @@ EOF
 kubectl apply -n web-ui -f https://raw.githubusercontent.com/solo-io/workshops/gloo-mesh-demo/gloo-mesh-demo/data/online-boutique/web-ui.yaml --context $REMOTE_CONTEXT1
 kubectl apply -n backend-apis -f https://raw.githubusercontent.com/solo-io/workshops/gloo-mesh-demo/gloo-mesh-demo/data/online-boutique/backend-apis-cluster1.yaml --context $REMOTE_CONTEXT1
 kubectl apply -n backend-apis -f https://raw.githubusercontent.com/solo-io/workshops/gloo-mesh-demo/gloo-mesh-demo/data/online-boutique/backend-apis-cluster1.yaml --context $REMOTE_CONTEXT2
-
+kubectl apply -f ./cluster1-tls-secret.yaml  --context $REMOTE_CONTEXT1
+kubectl apply -f ./cluster1-auth0-poc-developer-api-client-secret.yaml  --context $REMOTE_CONTEXT1
 
 kubectl apply -n backend-apis -f ./v2/checkout.yaml --context $REMOTE_CONTEXT1
 kubectl apply -n web-ui -f https://raw.githubusercontent.com/solo-io/workshops/gloo-mesh-demo/gloo-mesh-demo/data/online-boutique/web-ui-with-checkout.yaml --context $REMOTE_CONTEXT1
 
 
-kubectl create namespace ops --context $MGMT_CONTEXT
-kubectl create namespace web --context $MGMT_CONTEXT
-kubectl create namespace backend-apis --context $MGMT_CONTEXT
+kubectl create namespace ops-team --context $MGMT_CONTEXT
+kubectl create namespace web-team --context $MGMT_CONTEXT
+kubectl create namespace backend-apis-team --context $MGMT_CONTEXT
 
 
 #!/bin/bash
@@ -330,3 +331,5 @@ type: extauth.solo.io/oauth
 data:
   client-secret: $(echo -n 8Y9c11kPS3x2yGsdDbT3YrfYgIit7KhJ9iBcnoO8zNORyLS4x0cE98jKR1To-f-I | base64)
 EOF
+
+kubectl apply -f https://raw.githubusercontent.com/solo-io/solo-cop/main/workshops/gloo-mesh-demo/tracks/06-api-gateway/gloo-mesh-addons-servers.yaml --context ${MGMT}

@@ -1,0 +1,27 @@
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualHost
+metadata:
+  name: demo-virtualhost
+  namespace: gloo-mesh
+spec:
+  domains:
+  - '*'
+  routes:
+  - matchers:
+    - uri:
+        prefix: /hello
+    name: helloworld
+    routeAction:
+      destinations:
+      - kubeService:
+          clusterName: remotecluster1
+          name: helloworld
+          namespace: default
+          port: 5000
+        weight: 50
+      - kubeService:
+          clusterName: remotecluster2
+          name: helloworld
+          namespace: default
+          port: 5000
+        weight: 50

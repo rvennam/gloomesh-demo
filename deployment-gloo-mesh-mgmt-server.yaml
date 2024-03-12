@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    app.kubernetes.io/name: gloo-mesh-mgmt-server
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: gloo-mesh-enterprise
+    meta.helm.sh/release-namespace: gloo-mesh
+  creationTimestamp: "2022-04-13T14:04:25Z"
+  generation: 1
+  labels:
+    app: gloo-mesh-mgmt-server
+    app.kubernetes.io/managed-by: Helm
+  name: gloo-mesh-mgmt-server
+  namespace: gloo-mesh
+  resourceVersion: "18336"
+  uid: 4478c52f-346e-4c6e-af2f-543c7d026ef0
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: gloo-mesh-mgmt-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        app.kubernetes.io/name: gloo-mesh-mgmt-server
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+        sidecar.istio.io/inject: "false"
+      creationTimestamp: null
+      labels:
+        app: gloo-mesh-mgmt-server
+    spec:
+      containers:
+      - args:
+        - run
+        - --cluster=mgmt
+        - --admin-namespace=gloo-mesh
+        - --grpc-port=9900
+        - --stats-port=9091
+        - --dev-logger=false
+        - --relay-server-tls-secret-name=relay-server-tls-secret
+        - --relay-server-tls-secret-namespace=gloo-mesh
+        - --relay-tls-signing-secret-name=relay-tls-signing-secret
+        - --relay-tls-signing-secret-namespace=gloo-mesh
+        - --relay-identity-token-secret-name=relay-identity-token-secret
+        - --relay-identity-token-secret-namespace=gloo-mesh
+        - --relay-identity-token-secret-key=token
+        - --disable-relay-ca=false
+        - --relay-push-rbac=true
+        - --prometheus-url=http://prometheus-server
+        - --max-grpc-message-size=4294967295
+        - --concurrency=10
+        - --insecure=false
+        - --verbose=false
+        - --legacy-mode=false
+        - --leader-election=true
+        - --http-healthcheck-port=8090
+        - --redis-enabled=true
+        - --redis-address=gloo-mesh-redis.gloo-mesh:6379
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              key: key
+              name: gloo-mesh-enterprise-license
+        image: gcr.io/solo-test-236622/gloo-mesh-mgmt-server:2.0.0-beta25-3-g5cc217208-dirty
+        imagePullPolicy: IfNotPresent
+        name: gloo-mesh-mgmt-server
+        resources:
+          requests:
+            cpu: 125m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10101
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: gloo-mesh-mgmt-server
+      serviceAccountName: gloo-mesh-mgmt-server
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2022-04-13T14:04:27Z"
+    lastUpdateTime: "2022-04-13T14:04:27Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2022-04-13T14:04:25Z"
+    lastUpdateTime: "2022-04-13T14:04:27Z"
+    message: ReplicaSet "gloo-mesh-mgmt-server-7788d6699f" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

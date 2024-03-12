@@ -17,3 +17,51 @@ spec:
     locality: us-east4
   - address: dynamodb.us-west-1.amazonaws.com
     locality: us-west
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-solo
+spec:
+  addresses:
+  - 240.60.154.209
+  endpoints:
+  - address: solo.io
+    ports:
+      https: 443
+  exportTo:
+  - default
+  hosts:
+  - www.solo.io
+  - solo.io
+  ports:
+  - name: https
+    number: 443
+    protocol: https
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-docker
+spec:
+  hosts:
+  - docker.io
+  ports:
+  - name: tcp
+    number: 30000
+    protocol: TCP
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-tcp
+spec:
+  hosts:
+  - 200.125.68.34.bc.googleusercontent.com
+  ports:
+  - name: tcp
+    number: 9000
+    protocol: TCP
+  resolution: DNS

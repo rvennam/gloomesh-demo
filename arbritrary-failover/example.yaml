@@ -1,0 +1,72 @@
+# kubectl patch deploy helloworld-v1 --patch '{"spec": {"template": {"spec": {"containers": [{"name": "helloworld","command": ["sleep", "20h"]}]}}}}'
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualDestination
+metadata:
+  name: reviews-vd
+  namespace: gloo-mesh
+spec:
+  hostname: foo.global
+  port:
+    number: 5000
+    protocol: http
+  static:
+    destinations:
+    - kubeService:
+        name: helloworld
+        namespace: default
+        clusterName: remotecluster2
+    - kubeService:
+        name: helloworld
+        namespace: default
+        clusterName: remotecluster1
+  virtualMesh:
+    name: virtual-mesh
+    namespace: gloo-mesh
+---
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: TrafficPolicy
+metadata:
+  name: helloworld-shift-failover
+  namespace: gloo-mesh
+spec:
+  destinationSelector:
+  - kubeServiceRefs:
+      services:
+      - name: helloworld
+        namespace: default
+        clusterName: remotecluster1
+      - name: helloworld
+        namespace: default
+        clusterName: remotecluster2
+  policy:
+    outlierDetection:
+      consecutiveErrors: 1
+      maxEjectionPercent: 100
+      interval: 5s
+      baseEjectionTime: 30s
+---
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: TrafficPolicy
+metadata:
+  name: helloworld-shift-failover2
+  namespace: gloo-mesh
+spec:
+  destinationSelector:
+  - kubeServiceRefs:
+      services:
+      - name: helloworld
+        namespace: default
+        clusterName: remotecluster2
+  policy:
+    trafficShift:
+      destinations:
+        - kubeService:
+            clusterName: remotecluster1
+            name: helloworld
+            namespace: default
+          weight: 99
+        - kubeService:
+            clusterName: remotecluster2
+            name: helloworld
+            namespace: default
+          weight: 1

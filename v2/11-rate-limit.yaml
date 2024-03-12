@@ -1,17 +1,4 @@
-apiVersion: admin.gloo.solo.io/v2
-kind: RateLimitServerSettings
-metadata:
-  name: rate-limit-server-settings
-  namespace: web-team
-spec:
-  destinationServer:
-    port:
-      number: 8083
-    ref:
-      name: rate-limiter
-      namespace: gloo-mesh-addons
-      cluster: cluster1
----
+# Configure the rate limit client key
 apiVersion: trafficcontrol.policy.gloo.solo.io/v2
 kind: RateLimitClientConfig
 metadata:
@@ -24,11 +11,12 @@ spec:
       - genericKey:
           descriptorValue: counter
 ---
+# Configure the rate limit server to rate limit 3 on counter
 apiVersion: admin.gloo.solo.io/v2
 kind: RateLimitServerConfig
 metadata:
   name: rate-limit-server-config
-  namespace: web-team
+  namespace: ops-team
 spec:
   destinationServers:
   - ref:
@@ -66,7 +54,7 @@ spec:
       cluster: mgmt
     ratelimitServerConfig:
       name: rate-limit-server-config
-      namespace: web-team
+      namespace: ops-team
       cluster: mgmt
     phase:
       preAuthz: { }

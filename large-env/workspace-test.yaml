@@ -1,0 +1,33 @@
+apiVersion: admin.gloo.solo.io/v2
+kind: Workspace
+metadata:
+  name: scale-test50
+  namespace: gloo-mesh
+spec:
+  workloadClusters:
+  - name: 'mgmt-cluster'
+    namespaces:
+    - name: ns50
+  - name: '*'
+    namespaces:
+    - name: ns50
+---
+apiVersion: admin.gloo.solo.io/v2
+kind: WorkspaceSettings
+metadata:
+  name: scale-test50
+  namespace: ns50
+spec:
+  options:
+    eastWestGateways:
+    - selector:
+        labels:
+          istio: eastwestgateway
+    federation:
+      enabled: true
+      serviceSelector:
+      - {}
+    # disabled to show how to use Auth Policies
+    serviceIsolation:
+      enabled: false
+      trimProxyConfig: false

@@ -1,0 +1,100 @@
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualGateway
+metadata:
+  name: bookinfo-virtualgateway
+  namespace: gloo-mesh
+spec:
+  connectionHandlers:
+  - http:
+      routeConfig:
+      - virtualHostSelector:
+          namespaces:
+          - "gloo-mesh"
+  ingressGatewaySelectors:
+  - portName: http2
+    destinationSelectors:
+    - kubeServiceMatcher:
+        clusters:
+        - remotecluster1
+        labels:
+          istio: ingressgateway
+        namespaces:
+        - istio-system
+---
+apiVersion: networking.enterprise.mesh.gloo.solo.io/v1beta1
+kind: VirtualHost
+metadata:
+  name: bookinfo-virtualhost
+  namespace: gloo-mesh
+spec:
+  domains:
+  - '*'
+  routes:
+  - matchers:
+    - uri:
+        exact: /productpage
+    - uri:
+        prefix: /static
+    - uri:
+        exact: /login
+    - uri:
+        exact: /logout
+    - uri:
+        prefix: /api/v1/products
+    name: productpage
+    routeAction:
+      destinations:
+      - kubeService:
+          name: productpage
+          namespace: default
+          clusterName: remotecluster1
+      # - kubeService:
+      #     name: productpage
+      #     namespace: default
+      #     clusterName: remotecluster2
+  - matchers:
+    - uri:
+        prefix: /reviews
+    name: reviews
+    routeAction:
+      destinations:
+      # - kubeService:
+      #     name: reviews
+      #     namespace: default
+      # #     clusterName: remotecluster1
+      # - virtualDestination:      # proxy requests to the frontend VirtualDestination
+      #     name: reviews-vd
+      #     namespace: gloo-mesh
+      - virtualDestination:      # proxy requests to the frontend VirtualDestination
+          name: reviews-vd-2
+          namespace: gloo-mesh
+          subset:
+            version: v3
+---
+apiVersion: networking.mesh.gloo.solo.io/v1
+kind: TrafficPolicy
+metadata:
+  name: reviews-tp
+  namespace: gloo-mesh
+spec:
+  sourceSelector:
+  - kubeServiceAccountRefs:
+      serviceAccounts:
+        - name: istio-ingressgateway-service-account
+          namespace: istio-system
+          clusterName: remotecluster1
+  destinationSelector:
+  - kubeServiceRefs:
+      services:
+      - clusterName: remotecluster1
+        name: reviews
+        namespace: default
+  policy:
+    trafficShift:
+      destinations:
+      - virtualDestination:
+          name: reviews-vd
+          namespace: gloo-mesh
+
+
+# [2022-02-07T20:13:19.504Z] "GET /favicon.ico HTTP/2" 503 URX via_upstream - "-" 0 91 35 35 "100.64.0.6" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36" "0a2f3635-6511-4035-af71-9d93f8eaae7a" "glooengsolroll-deveusw1a.aexp.com" "192.168.15.14:8080" outbound|8080||sol-eng-gloo-roll-svc.sol-eng-gloo.svc.cluster.local 192.168.5.110:54112 192.168.5.110:8443 100.64.0.6:8477 glooengsolroll-deveusw1a.aexp.com sol-eng-gloo-roll-svc

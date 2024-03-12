@@ -11,12 +11,11 @@ spec:
   virtualGateways:
     - name: north-south-gw
       namespace: ops-team
-      cluster: mgmt
-  workloadSelectors: []
+      cluster: mgmt-cluster
   http:
     - name: frontend
       labels:
-        virtual-destination: frontend
+        route: "frontend"
       forwardTo:
         destinations:
           - ref:
