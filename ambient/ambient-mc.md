@@ -199,7 +199,9 @@ done
 
 
 
-GMC:
+## Add Gloo Mesh Core:
+
+### cluster1 will be both workload and managment:
 ```bash
 export MGMT_CLUSTER=mgmt
 export REMOTE_CLUSTER1=cluster1
@@ -214,8 +216,22 @@ meshctl install --profiles gloo-core-single-cluster \
 --set common.cluster=cluster1 \
 --set licensing.glooMeshCoreLicenseKey=$GLOO_MESH_CORE_LICENSE_KEY \
 --set telemetryGateway.enabled=true
+
 ```
 
+### register cluster2 as a workload cluster to cluster1:
+```
+export TELEMETRY_GATEWAY_IP=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $MGMT_CONTEXT -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")
+export TELEMETRY_GATEWAY_PORT=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $MGMT_CONTEXT -o jsonpath='{.spec.ports[?(@.name=="otlp")].port}')
+export TELEMETRY_GATEWAY_ADDRESS=${TELEMETRY_GATEWAY_IP}:${TELEMETRY_GATEWAY_PORT}
+echo $TELEMETRY_GATEWAY_ADDRESS
+
+meshctl cluster register $REMOTE_CLUSTER2   --kubecontext $MGMT_CONTEXT   --profiles gloo-core-agent   --remote-context $REMOTE_CONTEXT2   --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
+```
+
+
+
+# Expose Global Productpage
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -267,4 +283,13 @@ spec:
       name: productpage.bookinfo.mesh.internal
       port: 9080
 
+```
+
+
+```bash
+for context in ${CLUSTER1} ${CLUSTER2}; do
+  kubectl --context ${context} set image daemonset/ztunnel -n istio-system istio-proxy=ttl.sh/ztunnelewfix:24h
+  k --context ${context} annotate gtw -n istio-gateways istio-eastwest sidecar.istio.io/proxyImage=ttl.sh/ztunnelewfix:24h
+  k --context ${context} set image Deployment/istiod-gloo -n istio-system discovery=ttl.sh/istiodewfix:24h
+done
 ```
