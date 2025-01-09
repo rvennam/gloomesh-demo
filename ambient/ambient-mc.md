@@ -126,7 +126,7 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
 done
 ```
 
-# Expose Global Productpage
+# Expose Productpage using Istio Gateway
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
