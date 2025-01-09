@@ -13,7 +13,7 @@ Set up credentials for images (private builds)
 cd ~/Downloads # wherever your creds are
 for context in ${CLUSTER1} ${CLUSTER2}; do
   for namespace in gloo-system istio-system kube-system istio-gateways bookinfo; do
-    kubectl --context=${context} create namespace -n ${namespace} || true
+    kubectl --context=${context} create namespace ${namespace} || true
     kubectl --context=${context} create secret docker-registry regcred \
       --docker-server=https://us-docker.pkg.dev \
       --docker-username=_json_key \
@@ -22,6 +22,24 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
       -n ${namespace}
   done
 done
+```
+
+### Configure Trust
+```bash
+cd ~/istio-1.24.2
+```bash
+function create_cacerts_secret() {
+  context=${1:?context}
+  cluster=${2:?cluster}
+  kubectl --context=${context} create secret generic cacerts -n istio-system \
+    --from-file=certs/${cluster}/ca-cert.pem \
+    --from-file=certs/${cluster}/ca-key.pem \
+    --from-file=certs/${cluster}/root-cert.pem \
+    --from-file=certs/${cluster}/cert-chain.pem
+}
+
+create_cacerts_secret ${CLUSTER1} cluster1
+create_cacerts_secret ${CLUSTER2} cluster2
 ```
 
 ## Install Istio on both clusters using Gloo Operator
@@ -78,23 +96,7 @@ EOF
 ```
 
 
-### Configure Trust
-```bash
-cd ~/istio-1.24.2
-```bash
-function create_cacerts_secret() {
-  context=${1:?context}
-  cluster=${2:?cluster}
-  kubectl --context=${context} create secret generic cacerts -n istio-system \
-    --from-file=certs/${cluster}/ca-cert.pem \
-    --from-file=certs/${cluster}/ca-key.pem \
-    --from-file=certs/${cluster}/root-cert.pem \
-    --from-file=certs/${cluster}/cert-chain.pem
-}
 
-create_cacerts_secret ${CLUSTER1} cluster1
-create_cacerts_secret ${CLUSTER2} cluster2
-```
 
 ## Link the clusters together
 
@@ -180,19 +182,18 @@ spec:
 
 ```
 
+```bash
+curl $(kubectl get svc -n bookinfo bookinfo-gateway-istio --context $REMOTE_CONTEXT1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")/productpage
+```
 Voila!
 
 ## Gloo Mesh Core UI:
 
 ### cluster1 will be both workload and managment:
 ```bash
-export REMOTE_CLUSTER1=cluster1
-export REMOTE_CLUSTER2=cluster2
-export REMOTE_CONTEXT1=$CLUSTER1
-export REMOTE_CONTEXT2=$CLUSTER2
 
 meshctl install --profiles gloo-core-single-cluster \
---kubecontext $REMOTE_CONTEXT1 \
+--kubecontext $CLUSTER1 \
 --set common.cluster=cluster1 \
 --set licensing.glooMeshCoreLicenseKey=$GLOO_MESH_CORE_LICENSE_KEY \
 --set telemetryGateway.enabled=true
@@ -200,11 +201,14 @@ meshctl install --profiles gloo-core-single-cluster \
 
 ### Register cluster2 as a workload cluster to cluster1:
 ```bash
-export TELEMETRY_GATEWAY_IP=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $REMOTE_CONTEXT1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")
-export TELEMETRY_GATEWAY_PORT=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $REMOTE_CONTEXT1 -o jsonpath='{.spec.ports[?(@.name=="otlp")].port}')
+export TELEMETRY_GATEWAY_IP=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")
+export TELEMETRY_GATEWAY_PORT=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath='{.spec.ports[?(@.name=="otlp")].port}')
 export TELEMETRY_GATEWAY_ADDRESS=${TELEMETRY_GATEWAY_IP}:${TELEMETRY_GATEWAY_PORT}
 echo $TELEMETRY_GATEWAY_ADDRESS
 
-meshctl cluster register $REMOTE_CLUSTER2   --kubecontext $MGMT_CONTEXT   --profiles gloo-core-agent   --remote-context $REMOTE_CONTEXT2   --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
+meshctl cluster register cluster2  --kubecontext $CLUSTER1 --profiles gloo-core-agent --remote-context $CLUSTER2 --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
+```
+```
+meshctl dashboard
 ```
 ![alt text](./image.png)
