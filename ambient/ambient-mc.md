@@ -27,7 +27,6 @@ done
 ### Configure Trust
 ```bash
 cd ~/istio-1.24.2
-```bash
 function create_cacerts_secret() {
   context=${1:?context}
   cluster=${2:?cluster}
@@ -43,6 +42,8 @@ create_cacerts_secret ${CLUSTER2} cluster2
 ```
 
 ## Install Istio on both clusters using Gloo Operator
+
+Install the operator
 ```bash
 helm upgrade --install --kube-context=${CLUSTER1} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.2 -n gloo-system --create-namespace
 helm upgrade --install --kube-context=${CLUSTER2} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.2 -n gloo-system --create-namespace
@@ -96,8 +97,6 @@ EOF
 ```
 
 
-
-
 ## Link the clusters together
 
 Expose using an east-west gateway:
@@ -114,7 +113,6 @@ Run the following commands to deploy the bookinfo application on the clusters:
 
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
-  kubectl --context ${context} create ns bookinfo
   kubectl --context ${context} label namespace bookinfo istio.io/dataplane-mode=ambient
   kubectl --context ${context} apply -n bookinfo -f https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo.yaml
 done
@@ -183,7 +181,7 @@ spec:
 ```
 
 ```bash
-curl $(kubectl get svc -n bookinfo bookinfo-gateway-istio --context $REMOTE_CONTEXT1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")/productpage
+curl $(kubectl get svc -n bookinfo bookinfo-gateway-istio --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")/productpage
 ```
 Voila!
 
@@ -201,9 +199,7 @@ meshctl install --profiles gloo-core-single-cluster \
 
 ### Register cluster2 as a workload cluster to cluster1:
 ```bash
-export TELEMETRY_GATEWAY_IP=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")
-export TELEMETRY_GATEWAY_PORT=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath='{.spec.ports[?(@.name=="otlp")].port}')
-export TELEMETRY_GATEWAY_ADDRESS=${TELEMETRY_GATEWAY_IP}:${TELEMETRY_GATEWAY_PORT}
+export TELEMETRY_GATEWAY_ADDRESS=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}"):4317
 echo $TELEMETRY_GATEWAY_ADDRESS
 
 meshctl cluster register cluster2  --kubecontext $CLUSTER1 --profiles gloo-core-agent --remote-context $CLUSTER2 --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
@@ -212,3 +208,36 @@ meshctl cluster register cluster2  --kubecontext $CLUSTER1 --profiles gloo-core-
 meshctl dashboard
 ```
 ![alt text](./image.png)
+
+
+# Clean up
+
+```bash
+for context in ${CLUSTER1} ${CLUSTER2}; do
+  kubectl --context=${context} scale deploy gloo-operator --replicas=1 -n gloo-system
+  kubectl --context=${context} delete gateways --all -n istio-gateways
+  kubectl --context=${context} delete ns bookinfo
+  kubectl --context=${context} delete smc --all
+  sleep 10
+  helm uninstall gloo-operator -n gloo-system --kube-context=${context}
+  kubectl --context=${context} delete ns istio-system 
+  meshctl uninstall --kubecontext=${context}
+  kubectl --context=${context} delete ns gloo-mesh
+done
+```
+
+
+# Dev
+
+```bash
+export ztunnelimage=ttl.sh/jhrv-1925-zt:24h
+export istiodimage=ttl.sh/jhrv-1925-istiod:24h
+for context in ${CLUSTER1} ${CLUSTER2}; do
+  kubectl --context=${context} scale deploy gloo-operator --replicas=0 -n gloo-system
+  kubectl --context ${context} set image daemonset/ztunnel -n istio-system istio-proxy=${ztunnelimage}
+  kubectl --context ${context} annotate gtw -n istio-gateways istio-eastwest sidecar.istio.io/proxyImage=${ztunnelimage} --overwrite
+  kubectl --context ${context} set image Deployment/istiod-gloo -n istio-system discovery=${istiodimage}
+  kubectl --context ${context} delete pods --all -n gloo-mesh
+done
+
+```
