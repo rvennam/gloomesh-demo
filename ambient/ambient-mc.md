@@ -7,29 +7,16 @@ export CLUSTER2=gke_field-engineering-us_us-central1-c_rvennam-ilm-2
 export ISTIOCTL=/Users/ramvennam/Downloads/istioctl
 ```
 
-
-Set up credentials for images (private builds)
-```bash
-cd ~/Downloads # wherever your creds are
-for context in ${CLUSTER1} ${CLUSTER2}; do
-  for namespace in gloo-system istio-system kube-system istio-gateways bookinfo; do
-    kubectl --context=${context} create namespace ${namespace} || true
-    kubectl --context=${context} create secret docker-registry regcred \
-      --docker-server=https://us-docker.pkg.dev \
-      --docker-username=_json_key \
-      --docker-password="$(cat secret.json)" \
-      --docker-email=therealrameth@gmail.com \
-      -n ${namespace}
-  done
-done
-```
-
 ### Configure Trust
+
+https://istio.io/latest/docs/tasks/security/cert-management/plugin-ca-cert/
+
 ```bash
 cd ~/istio-1.24.2
 function create_cacerts_secret() {
   context=${1:?context}
   cluster=${2:?cluster}
+  kubectl --context=${context} create ns istio-system || true
   kubectl --context=${context} create secret generic cacerts -n istio-system \
     --from-file=certs/${cluster}/ca-cert.pem \
     --from-file=certs/${cluster}/ca-key.pem \
@@ -59,19 +46,14 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.36d8d1c094bdb946f793b4cf5e07167df5faaad8-internal
+  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
   installNamespace: istio-system
   cluster: cluster1
   network: cluster1
   repository:
-    url: oci://us-docker.pkg.dev/istio-enterprise-private/internal-istio-helm
-    secrets:
-      - name: regcred
-        namespace: gloo-system
+    url: oci://registry-1.docker.io/rvennam
   image:
     repository: docker.io/rvennam
-    secrets:
-      - name: regcred
 EOF
 
 kubectl --context=${CLUSTER2} apply -f - <<EOF
@@ -80,19 +62,14 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.36d8d1c094bdb946f793b4cf5e07167df5faaad8-internal
+  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c65666127dd8568d-internal
   installNamespace: istio-system
   cluster: cluster2
   network: cluster2
   repository:
-    url: oci://us-docker.pkg.dev/istio-enterprise-private/internal-istio-helm
-    secrets:
-      - name: regcred
-        namespace: gloo-system
+    url: oci://registry-1.docker.io/rvennam
   image:
     repository: docker.io/rvennam
-    secrets:
-      - name: regcred
 EOF
 ```
 
@@ -113,6 +90,7 @@ Run the following commands to deploy the bookinfo application on the clusters:
 
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
+  kubectl --context ${context} create ns bookinfo 
   kubectl --context ${context} label namespace bookinfo istio.io/dataplane-mode=ambient
   kubectl --context ${context} apply -n bookinfo -f https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo.yaml
 done
