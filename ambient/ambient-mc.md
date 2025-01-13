@@ -17,6 +17,7 @@ function create_cacerts_secret() {
   context=${1:?context}
   cluster=${2:?cluster}
   kubectl --context=${context} create ns istio-system || true
+  kubectl --context=${context} create ns istio-gateways || true
   kubectl --context=${context} create secret generic cacerts -n istio-system \
     --from-file=certs/${cluster}/ca-cert.pem \
     --from-file=certs/${cluster}/ca-key.pem \
