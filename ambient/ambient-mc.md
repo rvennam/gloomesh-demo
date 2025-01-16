@@ -2,8 +2,8 @@
 
 ## Create two clusters and set these env vars to their contexts
 ```bash
-export CLUSTER1=gke_field-engineering-us_us-central1-c_rvennam-ilm
-export CLUSTER2=gke_field-engineering-us_us-central1-c_rvennam-ilm-2
+export CLUSTER1=gke_ambient_one
+export CLUSTER2=gke_ambient_two
 export ISTIOCTL=/Users/ramvennam/Downloads/istioctl
 ```
 
@@ -12,17 +12,16 @@ export ISTIOCTL=/Users/ramvennam/Downloads/istioctl
 https://istio.io/latest/docs/tasks/security/cert-management/plugin-ca-cert/
 
 ```bash
-cd ~/istio-1.24.2
 function create_cacerts_secret() {
   context=${1:?context}
   cluster=${2:?cluster}
   kubectl --context=${context} create ns istio-system || true
   kubectl --context=${context} create ns istio-gateways || true
   kubectl --context=${context} create secret generic cacerts -n istio-system \
-    --from-file=certs/${cluster}/ca-cert.pem \
-    --from-file=certs/${cluster}/ca-key.pem \
-    --from-file=certs/${cluster}/root-cert.pem \
-    --from-file=certs/${cluster}/cert-chain.pem
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/ca-cert.pem \
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/ca-key.pem \
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/root-cert.pem \
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/cert-chain.pem
 }
 
 create_cacerts_secret ${CLUSTER1} cluster1
@@ -63,7 +62,7 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c65666127dd8568d-internal
+  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
   installNamespace: istio-system
   cluster: cluster2
   network: cluster2
@@ -86,6 +85,7 @@ Link clusters together:
 ```bash
 $ISTIOCTL multicluster link --contexts=$CLUSTER1,$CLUSTER2 -n istio-gateways
 ```
+
 # Install Bookinfo sample on both clusters
 Run the following commands to deploy the bookinfo application on the clusters:
 
@@ -94,6 +94,7 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
   kubectl --context ${context} create ns bookinfo 
   kubectl --context ${context} label namespace bookinfo istio.io/dataplane-mode=ambient
   kubectl --context ${context} apply -n bookinfo -f https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo.yaml
+  kubectl --context ${context} apply -n bookinfo -f https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo-versions.yaml
 done
 ```
 
@@ -106,6 +107,8 @@ done
 ```
 
 # Expose Productpage using Istio Gateway
+
+Apply the following Kubernetes Gateway API resources to cluster1 to expose productpage service using an Istio gateway:
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -159,10 +162,22 @@ spec:
 
 ```
 
+Wait until a LB IP gets assigned to bookinfo-gateway-istio svc and then visit the app!
+
 ```bash
 curl $(kubectl get svc -n bookinfo bookinfo-gateway-istio --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}")/productpage
 ```
-Voila!
+Voila! This should be round robinning between productpage on both clusters.
+
+
+### L7
+
+```bash
+for context in ${CLUSTER1} ${CLUSTER2}; do
+  istioctl --context=${context} waypoint apply -n bookinfo
+  kubectl --context=${context} label ns bookinfo istio.io/use-waypoint=waypoint
+done
+```
 
 ## Gloo Mesh Core UI:
 
@@ -189,6 +204,8 @@ meshctl dashboard
 ![alt text](./image.png)
 
 
+
+
 # Clean up
 
 ```bash
@@ -199,7 +216,10 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
   kubectl --context=${context} delete smc --all
   sleep 10
   helm uninstall gloo-operator -n gloo-system --kube-context=${context}
+  sleep 5
   kubectl --context=${context} delete ns istio-system 
+  kubectl --context=${context} delete ns gloo-system
+  kubectl --context=${context} delete ns istio-gateways 
   meshctl uninstall --kubecontext=${context}
   kubectl --context=${context} delete ns gloo-mesh
 done
