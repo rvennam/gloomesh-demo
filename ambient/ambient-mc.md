@@ -1,6 +1,9 @@
 # Gloo Ambient Multi-Cluster Demo
 
-## Create two clusters and set these env vars to their contexts
+## Env
+
+1. Create two clusters and set these env vars to their contexts
+2. Grab the latest istioctl nightly build
 ```bash
 export CLUSTER1=gke_ambient_one
 export CLUSTER2=gke_ambient_two
