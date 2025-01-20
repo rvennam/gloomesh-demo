@@ -1,6 +1,6 @@
 # Omni Part 2: Gloo Gateway as Ingress, Waypoint and Egress
 
-Prereq: : [Set up a two cluster ambient multi-cluster](https://github.com/rvennam/gloomesh-demo/blob/main/ambient/ambient-mc.md)
+Prereq: : [Set up a two cluster ambient multi-cluster with bookinfo](https://github.com/rvennam/gloomesh-demo/blob/main/ambient/ambient-mc.md)
 
 ## Install Gloo Gateway
 ```bash
@@ -126,7 +126,7 @@ spec:
       name: productpage.bookinfo.mesh.internal
       port: 9080
 ```
-## GG as Waypoint
+## Gloo Gateway as Waypoint
 
 ```yaml
 apiVersion: gateway.gloo.solo.io/v1alpha1
@@ -158,4 +158,30 @@ spec:
 ```
 ```bash
 kubectl label ns bookinfo istio.io/use-waypoint=gloo-waypoint  --overwrite
+```
+
+Use Gloo Gateway for header match traffic going to reviews
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: reviews
+  namespace: bookinfo
+spec:
+  parentRefs:
+  - group: ""
+    kind: Service
+    name: reviews
+    port: 9080
+  rules:
+  - matches:
+    - headers:
+      - name: end-user
+        value: jason
+    backendRefs:
+    - name: reviews-v2
+      port: 9080
+  - backendRefs:
+    - name: reviews-v1
+      port: 9080
 ```
