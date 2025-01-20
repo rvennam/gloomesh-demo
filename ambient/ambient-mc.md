@@ -1,4 +1,4 @@
-# Gloo Ambient Multi-Cluster Demo
+# Omni Part 1: Gloo Ambient Multi-Cluster Mesh
 
 ## Env
 
@@ -35,8 +35,8 @@ create_cacerts_secret ${CLUSTER2} cluster2
 
 Install the operator
 ```bash
-helm upgrade --install --kube-context=${CLUSTER1} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.2 -n gloo-system --create-namespace
-helm upgrade --install --kube-context=${CLUSTER2} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.2 -n gloo-system --create-namespace
+helm upgrade --install --kube-context=${CLUSTER1} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.3 -n gloo-system --create-namespace
+helm upgrade --install --kube-context=${CLUSTER2} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.3 -n gloo-system --create-namespace
 ```
 
 
@@ -179,6 +179,7 @@ Voila! This should be round robinning between productpage on both clusters.
 for context in ${CLUSTER1} ${CLUSTER2}; do
   istioctl --context=${context} waypoint apply -n bookinfo
   kubectl --context=${context} label ns bookinfo istio.io/use-waypoint=waypoint
+  kubectl --context=${context} apply -f ./reviews-v1.yaml 
 done
 ```
 
@@ -230,6 +231,13 @@ done
 
 
 # Dev
+
+```bash
+k apply -f ./gloo-mesh-ui-gloo-mesh-cluster-role.yaml
+k  set image Deployment/gloo-mesh-ui -n gloo-mesh console=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-ui:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
+k set image Deployment/gloo-mesh-ui -n gloo-mesh gloo-mesh-ui=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-apiserver:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
+
+```
 
 ```bash
 export ztunnelimage=ttl.sh/jhrv-1925-zt:24h

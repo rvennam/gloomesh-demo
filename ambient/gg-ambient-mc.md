@@ -1,3 +1,9 @@
+# Omni Part 2: Gloo Gateway as Ingress, Waypoint and Egress
+
+Prereq: : [Set up a two cluster ambient multi-cluster](https://github.com/rvennam/gloomesh-demo/blob/main/ambient/ambient-mc.md)
+
+## Install Gloo Gateway
+```bash
 export CLUSTER1=gke_ambient_one
 export CLUSTER2=gke_ambient_two
 export ISTIOCTL=/Users/ramvennam/Downloads/istioctl
@@ -11,6 +17,7 @@ helm upgrade --install -n gloo-system gloo glooe/gloo-ee \
 --set-string license_key=$GLOO_GATEWAY_LICENSE_KEY \
 -f -<<EOF
 gloo:
+gloo:
   discovery:
     enabled: false
   gatewayProxies:
@@ -20,6 +27,12 @@ gloo:
     enabled: true
   gloo:
     disableLeaderElection: true
+  settings:
+    kubeResourceOverride:
+      spec:
+        # NOTE
+        gloo: 
+          removeUnusedFilters: true
 gloo-fed:
   enabled: false
   glooFedApiserver:
@@ -27,22 +40,23 @@ gloo-fed:
 grafana:
   defaultInstallationEnabled: false
 observability:
-  enabled: false
+  enabled: true
 prometheus:
   enabled: false
 ambient:
+  # NOTE
   waypoint:
     enabled: true
 EOF
+```
 
-
+```bash
+kubectl --context ${CLUSTER1} label namespace gloo-system istio.io/dataplane-mode=ambient
 kubectl --context ${CLUSTER1} set image Deployment/gloo -n gloo-system gloo=slandow/gloo-ee:ambient-multinet-fix-automtls
+```
 
-# Edit the Settings to set removeUnusedFilters to true
-
-kubectl --context ${CLUSTER1} -n httpbin apply -f https://raw.githubusercontent.com/solo-io/gloo-mesh-use-cases/main/policy-demo/httpbin.yaml
-
-kubectl --context ${CLUSTER1} apply -f - <<EOF
+## Gloo Gateway as Ingress
+```yaml
 apiVersion: gateway.gloo.solo.io/v1alpha1
 kind: GatewayParameters
 metadata:
@@ -111,4 +125,37 @@ spec:
       group: networking.istio.io
       name: productpage.bookinfo.mesh.internal
       port: 9080
-EOF
+```
+## GG as Waypoint
+
+```yaml
+apiVersion: gateway.gloo.solo.io/v1alpha1
+kind: GatewayParameters
+metadata:
+  name: gloo-waypoint-override
+  namespace: bookinfo
+spec:
+  kube:
+    envoyContainer:
+      image:
+        registry: slandow
+        repository: gloo-ee-envoy-wrapper
+        tag: proxy-tlv
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+ name: gloo-waypoint
+ namespace: bookinfo
+ annotations:
+  gateway.gloo.solo.io/gateway-parameters-name: gloo-waypoint-override
+spec:
+ gatewayClassName: gloo-waypoint
+ listeners:
+ - name: proxy
+   port: 15088
+   protocol: istio.io/PROXY
+```
+```bash
+kubectl label ns bookinfo istio.io/use-waypoint=gloo-waypoint  --overwrite
+```
