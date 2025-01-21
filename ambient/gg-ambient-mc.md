@@ -203,7 +203,7 @@ apiVersion: gateway.gloo.solo.io/v1alpha1
 kind: GatewayParameters
 metadata:
   name: gloo-waypoint-override
-  namespace: bookinfo
+  namespace: gloo-system
 spec:
   kube:
     envoyContainer:
