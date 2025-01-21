@@ -1,6 +1,6 @@
 # Omni Part 2: Gloo Gateway as Ingress, Waypoint and Egress
 
-Prereq: [Gloo Ambient Multi-Cluster Mesh](https://github.com/rvennam/gloomesh-demo/blob/main/ambient/ambient-mc.md)
+Prereq: [Part 1: Gloo Ambient Multi-Cluster Mesh](https://github.com/rvennam/gloomesh-demo/blob/main/ambient/ambient-mc.md)
 
 In this part, we will use Gloo Gateway as the Ingress, Waypoint and as an Egress AI Gateway.
 
@@ -208,6 +208,8 @@ spec:
   kube:
     aiExtension:
       enabled: true
+    service:
+      type: ClusterIP
 ---
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1
