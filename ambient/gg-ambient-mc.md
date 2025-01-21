@@ -195,3 +195,85 @@ spec:
     - name: reviews-v1
       port: 9080
 ```
+
+## Gloo Gateway as an AI Gateway
+
+```yaml
+apiVersion: gateway.gloo.solo.io/v1alpha1
+kind: GatewayParameters
+metadata:
+  name: gloo-waypoint-override
+  namespace: bookinfo
+spec:
+  kube:
+    envoyContainer:
+      image:
+        registry: slandow
+        repository: gloo-ee-envoy-wrapper
+        tag: proxy-tlv
+    aiExtension:
+      enabled: true
+---
+kind: Gateway
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: ai-gateway
+  namespace: gloo-system
+  annotations:
+    gateway.gloo.solo.io/gateway-parameters-name: gloo-gateway-override
+spec:
+  gatewayClassName: gloo-gateway
+  listeners:
+  - protocol: HTTP
+    port: 8080
+    name: http
+    allowedRoutes:
+      namespaces:
+        from: All
+```
+
+
+```bash
+export OPENAI_API_KEY=<insert your API key>
+
+kubectl create secret generic openai-secret -n gloo-system \
+--from-literal="Authorization=Bearer $OPENAI_API_KEY" \
+--dry-run=client -oyaml | kubectl apply -f -
+```
+
+```yaml
+apiVersion: gloo.solo.io/v1
+kind: Upstream
+metadata:
+  labels:
+    app: gloo
+  name: openai
+  namespace: gloo-system
+spec:
+  ai:
+    openai:
+      authToken:
+        secretRef:
+          name: openai-secret
+          namespace: gloo-system
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: openai
+  namespace: gloo-system
+spec:
+  parentRefs:
+    - name: ai-gateway
+      namespace: gloo-system
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /openai
+    backendRefs:
+    - name: openai
+      namespace: gloo-system
+      group: gloo.solo.io
+      kind: Upstream
+```
