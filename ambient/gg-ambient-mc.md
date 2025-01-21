@@ -202,15 +202,10 @@ spec:
 apiVersion: gateway.gloo.solo.io/v1alpha1
 kind: GatewayParameters
 metadata:
-  name: gloo-waypoint-override
+  name: gloo-ai-gateway-override
   namespace: gloo-system
 spec:
   kube:
-    envoyContainer:
-      image:
-        registry: slandow
-        repository: gloo-ee-envoy-wrapper
-        tag: proxy-tlv
     aiExtension:
       enabled: true
 ---
@@ -220,7 +215,7 @@ metadata:
   name: ai-gateway
   namespace: gloo-system
   annotations:
-    gateway.gloo.solo.io/gateway-parameters-name: gloo-gateway-override
+    gateway.gloo.solo.io/gateway-parameters-name: gloo-ai-gateway-override
 spec:
   gatewayClassName: gloo-gateway
   listeners:
@@ -277,3 +272,12 @@ spec:
       group: gloo.solo.io
       kind: Upstream
 ```
+
+Call OpenAI from ratings:
+```bash
+kubectl exec -n bookinfo deploy/ratings-v1 -c ratings -- curl -v "gloo-proxy-ai-gateway.gloo-system:8080/openai" -H content-type:application/json -d '{"model": "gpt-4o-mini","max_tokens": 128,"messages": [{"role": "system","content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."},{"role": "user","content": "Compose a poem that explains the concept of recursion in programming."}]}' | jq
+```
+
+Check out the UI:
+
+![alt text](image-3.png)
