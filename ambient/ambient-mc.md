@@ -1,9 +1,17 @@
 # Omni Part 1: Gloo Ambient Multi-Cluster Mesh
+![alt text](image-1.png)
+Gloo: An omni-directional solution that covers ingress, service-to-service, and egress traffic with a unified approach.
+
+In this part, we will set up Istio with Ambient mode across two clusters, deploy Bookinfo sample and expose multi-cluster productpage using Istio Gateway.
+
+![alt text](image-2.png)
 
 ## Env
 
-1. Create two clusters and set these env vars to their contexts
+1. Create two clusters
 2. Grab the latest istioctl nightly build
+
+Set env vars
 ```bash
 export CLUSTER1=gke_ambient_one
 export CLUSTER2=gke_ambient_two

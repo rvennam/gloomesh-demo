@@ -1,6 +1,10 @@
 # Omni Part 2: Gloo Gateway as Ingress, Waypoint and Egress
 
-Prereq: : [Set up a two cluster ambient multi-cluster with bookinfo](https://github.com/rvennam/gloomesh-demo/blob/main/ambient/ambient-mc.md)
+Prereq: [Gloo Ambient Multi-Cluster Mesh](https://github.com/rvennam/gloomesh-demo/blob/main/ambient/ambient-mc.md)
+
+In this part, we will use Gloo Gateway as the Ingress, Waypoint and as an Egress AI Gateway.
+
+![alt text](image-1.png)
 
 ## Install Gloo Gateway
 ```bash
