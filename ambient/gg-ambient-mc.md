@@ -153,8 +153,8 @@ kind: Gateway
 metadata:
  name: gloo-waypoint
  namespace: bookinfo
- #annotations:
-  #gateway.gloo.solo.io/gateway-parameters-name: gloo-waypoint-override
+ annotations:
+  gateway.gloo.solo.io/gateway-parameters-name: gloo-waypoint-override
 spec:
  gatewayClassName: gloo-waypoint
  listeners:
