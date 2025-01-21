@@ -184,6 +184,7 @@ Voila! This should be round robinning between productpage on both clusters.
 
 
 ### L7 - Istio Waypoint
+For L7 advanced traffic control, we need a waypoint. In this section, we will deploy a standard Isito waypoint, but in part 2, we will replace thsi waypoint with a Gloo Gateway as waypoint.
 
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
