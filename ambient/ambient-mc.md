@@ -238,7 +238,7 @@ done
 ```
 
 
-# Dev
+## Use nightly UI images
 
 ```bash
 k apply -f ./gloo-mesh-ui-gloo-mesh-cluster-role.yaml
@@ -247,15 +247,6 @@ k set image Deployment/gloo-mesh-ui -n gloo-mesh gloo-mesh-ui=us-docker.pkg.dev/
 
 ```
 
-```bash
-export ztunnelimage=ttl.sh/jhrv-1925-zt:24h
-export istiodimage=ttl.sh/jhrv-1925-istiod:24h
-for context in ${CLUSTER1} ${CLUSTER2}; do
-  kubectl --context=${context} scale deploy gloo-operator --replicas=0 -n gloo-system
-  kubectl --context ${context} set image daemonset/ztunnel -n istio-system istio-proxy=${ztunnelimage}
-  kubectl --context ${context} annotate gtw -n istio-gateways istio-eastwest sidecar.istio.io/proxyImage=${ztunnelimage} --overwrite
-  kubectl --context ${context} set image Deployment/istiod-gloo -n istio-system discovery=${istiodimage}
-  kubectl --context ${context} delete pods --all -n gloo-mesh
-done
+Follow on to Part 2!
 
-```
+[Omni Part 2: Gloo Gateway as Ingress, Waypoint and Egress](./gg-ambient-mc.md)
