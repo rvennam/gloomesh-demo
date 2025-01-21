@@ -17,7 +17,6 @@ helm upgrade --install -n gloo-system gloo glooe/gloo-ee \
 --set-string license_key=$GLOO_GATEWAY_LICENSE_KEY \
 -f -<<EOF
 gloo:
-gloo:
   discovery:
     enabled: false
   gatewayProxies:
@@ -27,6 +26,13 @@ gloo:
     enabled: true
   gloo:
     disableLeaderElection: true
+    deployment:
+      customEnv:
+        # The waypoint translator is disabled by default, so must explicitly enable it
+        # TODO we can't edit gloo deploy env vars via the enterprise values...
+        # That would make this much cleaner.
+        - name: ENABLE_WAYPOINTS
+          value: "true"
   settings:
     kubeResourceOverride:
       spec:
@@ -147,8 +153,8 @@ kind: Gateway
 metadata:
  name: gloo-waypoint
  namespace: bookinfo
- annotations:
-  gateway.gloo.solo.io/gateway-parameters-name: gloo-waypoint-override
+ #annotations:
+  #gateway.gloo.solo.io/gateway-parameters-name: gloo-waypoint-override
 spec:
  gatewayClassName: gloo-waypoint
  listeners:
