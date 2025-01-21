@@ -1,12 +1,14 @@
-# Omni Part 1: Gloo Ambient Multi-Cluster Mesh
+# Omni
 ![alt text](image-1.png)
 Gloo: An omni-directional solution that covers ingress, service-to-service, and egress traffic with a unified approach.
+
+##  Part 1: Gloo Ambient Multi-Cluster Mesh
 
 In this part, we will set up Istio with Ambient mode across two clusters, deploy Bookinfo sample and expose multi-cluster productpage using Istio Gateway.
 
 ![alt text](image-2.png)
 
-## Env
+### Env
 
 1. Create two clusters
 2. Grab the latest istioctl nightly build
@@ -39,7 +41,7 @@ create_cacerts_secret ${CLUSTER1} cluster1
 create_cacerts_secret ${CLUSTER2} cluster2
 ```
 
-## Install Istio on both clusters using Gloo Operator
+### Install Istio on both clusters using Gloo Operator
 
 Install the operator
 ```bash
@@ -85,7 +87,7 @@ EOF
 ```
 
 
-## Link the clusters together
+### Link the clusters together
 
 Expose using an east-west gateway:
 ```bash
@@ -97,7 +99,7 @@ Link clusters together:
 $ISTIOCTL multicluster link --contexts=$CLUSTER1,$CLUSTER2 -n istio-gateways
 ```
 
-# Install Bookinfo sample on both clusters
+### Install Bookinfo sample on both clusters
 Run the following commands to deploy the bookinfo application on the clusters:
 
 ```bash
@@ -117,7 +119,7 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
 done
 ```
 
-# Expose Productpage using Istio Gateway
+### Expose Productpage using Istio Gateway
 
 Apply the following Kubernetes Gateway API resources to cluster1 to expose productpage service using an Istio gateway:
 
@@ -181,7 +183,7 @@ curl $(kubectl get svc -n bookinfo bookinfo-gateway-istio --context $CLUSTER1 -o
 Voila! This should be round robinning between productpage on both clusters.
 
 
-### L7
+### L7 - Istio Waypoint
 
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
@@ -191,7 +193,7 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
 done
 ```
 
-## Gloo Mesh Core UI:
+### Gloo Mesh Core UI:
 
 ### cluster1 will be both workload and managment:
 ```bash
