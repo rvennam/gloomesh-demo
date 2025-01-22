@@ -18,7 +18,7 @@ helm repo update
 helm upgrade --install -n gloo-system gloo glooe/gloo-ee \
 --create-namespace \
 --version 1.18.2 \
---kube-context $CLUSTER1
+--kube-context ${CLUSTER1} \
 --set-string license_key=$GLOO_GATEWAY_LICENSE_KEY \
 -f -<<EOF
 gloo:
