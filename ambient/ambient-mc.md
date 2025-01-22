@@ -188,7 +188,7 @@ For L7 advanced traffic control, we need a waypoint. In this section, we will de
 
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
-  istioctl --context=${context} waypoint apply -n bookinfo
+  $ISTIOCTL --context=${context} waypoint apply -n bookinfo
   kubectl --context=${context} label ns bookinfo istio.io/use-waypoint=waypoint
   kubectl --context=${context} apply -f ./reviews-v1.yaml 
 done

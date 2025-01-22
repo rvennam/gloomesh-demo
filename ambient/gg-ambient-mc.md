@@ -18,6 +18,7 @@ helm repo update
 helm upgrade --install -n gloo-system gloo glooe/gloo-ee \
 --create-namespace \
 --version 1.18.2 \
+--kube-context $CLUSTER1
 --set-string license_key=$GLOO_GATEWAY_LICENSE_KEY \
 -f -<<EOF
 gloo:
@@ -167,7 +168,7 @@ spec:
    protocol: istio.io/PROXY
 ```
 ```bash
-kubectl label ns bookinfo istio.io/use-waypoint=gloo-waypoint  --overwrite
+kubectl --context ${CLUSTER1} label ns bookinfo istio.io/use-waypoint=gloo-waypoint  --overwrite
 ```
 
 Use Gloo Gateway for header match traffic going to reviews
@@ -233,7 +234,7 @@ spec:
 ```bash
 export OPENAI_API_KEY=<insert your API key>
 
-kubectl create secret generic openai-secret -n gloo-system \
+kubectl --context ${CLUSTER1} create secret generic openai-secret -n gloo-system \
 --from-literal="Authorization=Bearer $OPENAI_API_KEY" \
 --dry-run=client -oyaml | kubectl apply -f -
 ```
@@ -277,7 +278,7 @@ spec:
 
 Call OpenAI from ratings:
 ```bash
-kubectl exec -n bookinfo deploy/ratings-v1 -c ratings -- curl -v "gloo-proxy-ai-gateway.gloo-system:8080/openai" -H content-type:application/json -d '{"model": "gpt-4o-mini","max_tokens": 128,"messages": [{"role": "system","content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."},{"role": "user","content": "Compose a poem that explains the concept of recursion in programming."}]}' | jq
+kubectl --context ${CLUSTER1} exec -n bookinfo deploy/ratings-v1 -c ratings -- curl -v "gloo-proxy-ai-gateway.gloo-system:8080/openai" -H content-type:application/json -d '{"model": "gpt-4o-mini","max_tokens": 128,"messages": [{"role": "system","content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."},{"role": "user","content": "Compose a poem that explains the concept of recursion in programming."}]}' | jq
 ```
 
 Check out the UI:
