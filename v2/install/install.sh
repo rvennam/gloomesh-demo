@@ -19,7 +19,7 @@ export REMOTE_CONTEXT2=cluster2
 export ISTIO_IMAGE_REPO=us-docker.pkg.dev/gloo-mesh/istio-workshops
 export ISTIO_IMAGE_TAG=1.16.2-solo
 export ISTIO_VERSION=1.16.2
-export GLOO_MESH_VERSION=v2.3.15
+export GLOO_MESH_VERSION=v2.7.0-beta1
 
 curl -sL https://run.solo.io/meshctl/install | GLOO_MESH_VERSION=$GLOO_MESH_VERSION sh -
 

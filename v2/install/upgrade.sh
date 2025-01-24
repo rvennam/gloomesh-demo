@@ -1,10 +1,11 @@
 rm -rf ./gloo-mesh-agent
 rm -rf ./gloo-mesh-enterprise
 
-export UPGRADE_VERSION=2.5.0
+export UPGRADE_VERSION=2.6.6
 export MGMT_CONTEXT=mgmt
-export REMOTE_CONTEXT1=cluster1
-export REMOTE_CONTEXT2=cluster2
+export MGMT=mgmt
+export CLUSTER1=cluster1
+export CLUSTER2=cluster2
 export NAMESPACE=gloo-mesh
 
 helm repo add gloo-platform https://storage.googleapis.com/gloo-platform/helm-charts
@@ -42,22 +43,34 @@ prometheus:
 redis:
   deployment:
     enabled: true
+jaeger:
+  enabled: true
 telemetryGateway:
   enabled: true
   service:
     type: LoadBalancer
+telemetryGatewayCustomization:
+  pipelines:
+    traces/jaeger:
+      enabled: true
 glooUi:
   enabled: true
   serviceType: LoadBalancer
 telemetryCollector:
   enabled: true
+telemetryCollectorCustomization:
+  pipelines:
+    traces/istio:
+      enabled: true
+glooInsightsEngine:
+  enabled: true
 EOF
 
 sleep 3
 
-export ENDPOINT_GLOO_MESH=$(kubectl --context ${MGMT} -n gloo-mesh get svc gloo-mesh-mgmt-server -o jsonpath='{.status.loadBalancer.ingress[0].*}'):9900
+export ENDPOINT_GLOO_MESH=$(kubectl --context ${MGMT} -n gloo-mesh get svc gloo-mesh-mgmt-server -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):9900
 export HOST_GLOO_MESH=$(echo ${ENDPOINT_GLOO_MESH%:*})
-export ENDPOINT_TELEMETRY_GATEWAY=$(kubectl --context ${MGMT} -n gloo-mesh get svc gloo-telemetry-gateway -o jsonpath='{.status.loadBalancer.ingress[0].*}'):4317
+export ENDPOINT_TELEMETRY_GATEWAY=$(kubectl --context ${MGMT} -n gloo-mesh get svc gloo-telemetry-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):4317
 
 echo $HOST_GLOO_MESH
 echo $ENDPOINT_GLOO_MESH
@@ -85,6 +98,12 @@ telemetryCollector:
     exporters:
       otlp:
         endpoint: "${ENDPOINT_TELEMETRY_GATEWAY}"
+telemetryCollectorCustomization:
+  pipelines:
+    traces/istio:
+      enabled: true
+glooAnalyzer:
+  enabled: true
 EOF
 
 
@@ -111,4 +130,10 @@ telemetryCollector:
     exporters:
       otlp:
         endpoint: "${ENDPOINT_TELEMETRY_GATEWAY}"
+telemetryCollectorCustomization:
+  pipelines:
+    traces/istio:
+      enabled: true
+glooAnalyzer:
+  enabled: true
 EOF

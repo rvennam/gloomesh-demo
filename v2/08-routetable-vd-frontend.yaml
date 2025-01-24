@@ -7,7 +7,7 @@ metadata:
     lab: failover
 spec:
   hosts:
-    - '*'
+    - '*'             # onlineboutique.mycompany.com
   virtualGateways:
     - name: north-south-gw
       namespace: ops-team
@@ -21,6 +21,6 @@ spec:
           - ref:
               name: frontend
               namespace: web-team
-            kind: VIRTUAL_DESTINATION
+            kind: VIRTUAL_DESTINATION # Routing to a Virtual Destination instead of a K8S Service
             port:
               number: 80

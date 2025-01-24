@@ -5,13 +5,16 @@ metadata:
   namespace: web-team
 spec:
   hosts:
-    - '*'
+    - '*'             # onlineboutique.mycompany.com
   virtualGateways:
     - name: north-south-gw
       namespace: ops-team
       cluster: mgmt-cluster
   http:
     - name: frontend
+      matchers:
+      - uri:
+          prefix: /
       labels:
         route: "frontend"
       forwardTo:

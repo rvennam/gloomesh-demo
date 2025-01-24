@@ -13,8 +13,8 @@ spec:
       configs:
         - oauth2:
             oidcAuthorizationCode:
-              afterLogoutUrl: "https://35.185.124.178:443"
-              appUrl: https://35.185.124.178:443
+              afterLogoutUrl: "https://35.196.60.126:443"
+              appUrl: https://35.196.60.126:443
               callbackPath: /callback
               clientId: LowR3GbZHu3Ycf0baBL1pXecldgpFdY6
               clientSecretRef:

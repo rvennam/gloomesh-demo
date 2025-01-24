@@ -8,8 +8,10 @@ spec:
     - selector:
         labels:
           istio: ingressgateway
-        cluster: cluster1
+        cluster: cluster1       # Omit this to program ingress gateways all clusters
   listeners:
     - http: {}
       port:
         name: http2
+      allowedRouteTables:
+        - host: '*'             # This can be *.mycompany.com
