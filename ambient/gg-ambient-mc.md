@@ -29,9 +29,20 @@ gloo:
       disabled: true
   kubeGateway:
     enabled: true
+    gatewayParameters:
+      glooGateway:
+        envoyContainer:
+          image:
+            repository: slandow/gloo-ee-envoy-wrapper
+            tag: proxy-tlv
+            registry: docker.io
   gloo:
     disableLeaderElection: true
     deployment:
+      image:
+        repository: slandow/gloo-ee
+        tag: ambient-multinet-fix-automtls
+        registry: docker.io
       customEnv:
         # The waypoint translator is disabled by default, so must explicitly enable it
         # TODO we can't edit gloo deploy env vars via the enterprise values...
@@ -63,35 +74,15 @@ EOF
 
 ```bash
 kubectl --context ${CLUSTER1} label namespace gloo-system istio.io/dataplane-mode=ambient
-kubectl --context ${CLUSTER1} set image Deployment/gloo -n gloo-system gloo=slandow/gloo-ee:ambient-multinet-fix-automtls
 ```
 
 ## Gloo Gateway as Ingress
 ```yaml
-apiVersion: gateway.gloo.solo.io/v1alpha1
-kind: GatewayParameters
-metadata:
-  name: gloo-gateway-override
-  namespace: gloo-system
-spec:
-  kube:
-    deployment:
-      replicas: 1
-    service:
-      type: LoadBalancer
-    envoyContainer:
-      image:
-        registry: slandow
-        repository: gloo-ee-envoy-wrapper
-        tag: proxy-tlv
----
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1
 metadata:
   name: http
   namespace: gloo-system
-  annotations:
-    gateway.gloo.solo.io/gateway-parameters-name: gloo-gateway-override
 spec:
   gatewayClassName: gloo-gateway
   listeners:
@@ -140,26 +131,11 @@ spec:
 ## Gloo Gateway as Waypoint
 
 ```yaml
-apiVersion: gateway.gloo.solo.io/v1alpha1
-kind: GatewayParameters
-metadata:
-  name: gloo-waypoint-override
-  namespace: bookinfo
-spec:
-  kube:
-    envoyContainer:
-      image:
-        registry: slandow
-        repository: gloo-ee-envoy-wrapper
-        tag: proxy-tlv
----
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
  name: gloo-waypoint
  namespace: bookinfo
- annotations:
-  gateway.gloo.solo.io/gateway-parameters-name: gloo-waypoint-override
 spec:
  gatewayClassName: gloo-waypoint
  listeners:
@@ -211,6 +187,11 @@ spec:
       enabled: true
     service:
       type: ClusterIP
+    envoyContainer:
+      image:
+        registry: quay.io/solo-io
+        repository: gloo-ee-envoy-wrapper
+        tag: 1.18.2
 ---
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1
