@@ -1,0 +1,48 @@
+gloo:
+  discovery:
+    enabled: false
+  gatewayProxies:
+    gatewayProxy:
+      disabled: true
+  kubeGateway:
+    enabled: true
+    gatewayParameters:
+      glooGateway:
+        envoyContainer:
+          image:
+            repository: slandow/gloo-ee-envoy-wrapper
+            tag: proxy-tlv
+            registry: docker.io
+  gloo:
+    disableLeaderElection: true
+    deployment:
+      image:
+        repository: slandow/gloo-ee
+        tag: ambient-multinet-fix-automtls
+        registry: docker.io
+      customEnv:
+        # The waypoint translator is disabled by default, so must explicitly enable it
+        # TODO we can't edit gloo deploy env vars via the enterprise values...
+        # That would make this much cleaner.
+        - name: ENABLE_WAYPOINTS
+          value: "true"
+  settings:
+    kubeResourceOverride:
+      spec:
+        # NOTE
+        gloo: 
+          removeUnusedFilters: true
+gloo-fed:
+  enabled: false
+  glooFedApiserver:
+    enable: false
+grafana:
+  defaultInstallationEnabled: false
+observability:
+  enabled: true
+prometheus:
+  enabled: false
+ambient:
+  # NOTE
+  waypoint:
+    enabled: true

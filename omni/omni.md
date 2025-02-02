@@ -1,0 +1,278 @@
+# Omni
+
+## Install Gloo Gateway on cluster1
+
+```bash
+helm repo add glooe https://storage.googleapis.com/gloo-ee-helm
+helm repo update
+
+helm upgrade --install -n gloo-system gloo glooe/gloo-ee \
+--create-namespace \
+--version 1.18.2 \
+--kube-context ${CLUSTER1} \
+--set-string license_key=$GLOO_GATEWAY_LICENSE_KEY \
+-f ./gg-values.yaml
+```
+
+## GG to expose productpage
+
+```yaml
+kind: Gateway
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: http
+  namespace: gloo-system
+spec:
+  gatewayClassName: gloo-gateway
+  listeners:
+  - protocol: HTTP
+    port: 8080
+    name: http
+    allowedRoutes:
+      namespaces:
+        from: All
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: bookinfo-gg
+  namespace: bookinfo
+spec:
+  parentRefs:
+  - name: http
+    namespace: gloo-system
+  rules:
+  - matches:
+    - path:
+        type: Exact
+        value: /productpage
+    - path:
+        type: PathPrefix
+        value: /static
+    - path:
+        type: Exact
+        value: /login
+    - path:
+        type: Exact
+        value: /logout
+    backendRefs:
+    - name: productpage
+      port: 9080
+```
+
+# Deploy Istio
+
+## Configure Trust
+```bash
+function create_cacerts_secret() {
+  context=${1:?context}
+  cluster=${2:?cluster}
+  kubectl --context=${context} create ns istio-system || true
+  kubectl --context=${context} create ns istio-gateways || true
+  kubectl --context=${context} create secret generic cacerts -n istio-system \
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/ca-cert.pem \
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/ca-key.pem \
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/root-cert.pem \
+    --from-file=$HOME/istio-1.24.2/certs/${cluster}/cert-chain.pem
+}
+
+create_cacerts_secret ${CLUSTER1} cluster1
+create_cacerts_secret ${CLUSTER2} cluster2
+```
+
+## Install the Gloo Operator
+```bash
+for context in ${CLUSTER1} ${CLUSTER2}; do
+  helm upgrade --install --kube-context=${context} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.3 -n gloo-system --create-namespace &
+done
+```
+
+
+Use the `ServiceMeshController` resource to install Istio on both clusters
+
+```bash
+for context in ${CLUSTER1} ${CLUSTER2}; do
+    cluster=$(echo ${context} | tr '[:upper:]' '[:lower:]')
+    kubectl --context=${context} apply -f - <<EOF
+apiVersion: operator.gloo.solo.io/v1
+kind: ServiceMeshController
+metadata:
+    name: istio
+spec:
+    version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
+    installNamespace: istio-system
+    cluster: ${cluster}
+    network: ${cluster}
+    repository:
+        url: oci://registry-1.docker.io/rvennam
+    image:
+        repository: docker.io/rvennam
+EOF
+done
+```
+
+
+
+## Onboard Gloo Gateway and Bookinfo to Mesh
+
+```bash
+kubectl --context ${CLUSTER1} label namespace gloo-system istio.io/dataplane-mode=ambient
+kubectl --context ${CLUSTER1} label namespace bookinfo istio.io/dataplane-mode=ambient
+kubectl --context ${CLUSTER2} label namespace bookinfo istio.io/dataplane-mode=ambient
+```
+
+### Peer the clusters together
+
+Deploy an east-west gateway:
+```bash
+$ISTIOCTL --context=${CLUSTER1} multicluster expose -n istio-gateways
+$ISTIOCTL --context=${CLUSTER2} multicluster expose -n istio-gateways
+```
+Link clusters together:
+```bash
+$ISTIOCTL multicluster link --contexts=$CLUSTER1,$CLUSTER2 -n istio-gateways
+```
+
+
+## Gloo Gateway as Multi-Cluster Ingress
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: bookinfo-gg
+  namespace: bookinfo
+spec:
+  parentRefs:
+  - name: http
+    namespace: gloo-system
+  rules:
+  - matches:
+    - path:
+        type: Exact
+        value: /productpage
+    - path:
+        type: PathPrefix
+        value: /static
+    - path:
+        type: Exact
+        value: /login
+    - path:
+        type: Exact
+        value: /logout
+    # backendRefs:
+    # - name: productpage
+    #   port: 9080
+    backendRefs:
+    - kind: Hostname
+      group: networking.istio.io
+      name: productpage.bookinfo.mesh.internal
+      port: 9080
+```
+## Gloo Gateway as Waypoint
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+ name: gloo-waypoint
+ namespace: bookinfo
+spec:
+ gatewayClassName: gloo-waypoint
+ listeners:
+ - name: proxy
+   port: 15088
+   protocol: istio.io/PROXY
+```
+```bash
+kubectl --context ${CLUSTER1} label ns bookinfo istio.io/use-waypoint=gloo-waypoint  --overwrite
+kubectl --context ${CLUSTER2} label ns bookinfo istio.io/use-waypoint=waypoint  --overwrite
+```
+
+Use Gloo Gateway waypoint for canary traffic going to reviews
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: reviews
+  namespace: bookinfo
+spec:
+  parentRefs:
+  - group: ""
+    kind: Service
+    name: reviews
+    port: 9080
+  rules:
+  - matches:
+    - headers:
+      - name: end-user
+        value: jason
+    backendRefs:
+    - name: reviews-v2
+      port: 9080
+  - backendRefs:
+    - name: reviews-v1
+      port: 9080
+```
+
+
+## Gloo Gateway as an AI Gateway
+
+```yaml
+apiVersion: gateway.gloo.solo.io/v1alpha1
+kind: GatewayParameters
+metadata:
+  name: gloo-ai-gateway-override
+  namespace: gloo-system
+spec:
+  kube:
+    aiExtension:
+      enabled: true
+    service:
+      type: ClusterIP
+    envoyContainer:
+      image:
+        registry: quay.io/solo-io
+        repository: gloo-ee-envoy-wrapper
+        tag: 1.18.2
+---
+kind: Gateway
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: ai-gateway
+  namespace: gloo-system
+  annotations:
+    gateway.gloo.solo.io/gateway-parameters-name: gloo-ai-gateway-override
+spec:
+  gatewayClassName: gloo-gateway
+  listeners:
+  - protocol: HTTP
+    port: 8080
+    name: http
+    allowedRoutes:
+      namespaces:
+        from: All
+```
+
+### Gloo Management Plane
+
+### cluster1 will be both workload and managment:
+```bash
+
+meshctl install --profiles gloo-core-single-cluster \
+--kubecontext $CLUSTER1 \
+--set common.cluster=cluster1 \
+--set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY \
+--set telemetryGateway.enabled=true \
+--set featureGates.GatewayDistribution=true
+```
+
+### Register cluster2 as a workload cluster to cluster1:
+```bash
+export TELEMETRY_GATEWAY_ADDRESS=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}"):4317
+echo $TELEMETRY_GATEWAY_ADDRESS
+
+meshctl cluster register cluster2  --kubecontext $CLUSTER1 --profiles gloo-core-agent --remote-context $CLUSTER2 --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
+```
+```
+meshctl dashboard
+```
