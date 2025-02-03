@@ -341,13 +341,6 @@ kubectl --context ${CLUSTER1} exec -n bookinfo deploy/ratings-v1 -c ratings -- c
 helm upgrade -i gloo-platform-crds gloo-platform/gloo-platform-crds -n gloo-mesh --create-namespace --version=2.7.0-rc1
 helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version 2.7.0-rc1 --values mgmt-values.yaml \
   --set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY
-
-meshctl install --profiles gloo-core-single-cluster \
---kubecontext $CLUSTER1 \
---set common.cluster=cluster1 \
---set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY \
---set telemetryGateway.enabled=true \
---set featureGates.GatewayDistribution=true
 ```
 
 ### Register cluster2 as a workload cluster to cluster1:
