@@ -1,0 +1,320 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: gloo-mesh-ui
+    app.kubernetes.io/managed-by: Helm
+  name: gloo-mesh-ui-gloo-mesh
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - nodes
+      - serviceaccounts
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - admin.gloo.solo.io
+    resources:
+      - dashboards
+      - extauthservers
+      - gatewaylifecyclemanagers
+      - insightsconfigs
+      - istiolifecyclemanagers
+      - kubernetesclusters
+      - ratelimitserverconfigs
+      - ratelimitserversettings
+      - roottrustpolicies
+      - waypointlifecyclemanagers
+      - workspaces
+      - workspacesettings
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - admin.gloo.solo.io
+    resources:
+      - dashboards/status
+      - kubernetesclusters/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apimanagement.gloo.solo.io
+    resources:
+      - apidocs
+      - apiproducts
+      - apischemadiscoveries
+      - graphqlresolvermaps
+      - graphqlschemas
+      - graphqlstitchedschemas
+      - portalgroups
+      - portals
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - enterprise.gloo.solo.io
+    resources:
+      - authconfigs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extauth.solo.io
+    resources:
+      - authconfigs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions.policy.gloo.solo.io
+    resources:
+      - wasmdeploymentpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - gateway.gloo.solo.io
+    resources:
+      - gatewayparameters
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - gatewayclasses
+      - gateways
+      - httproutes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - gateway.solo.io
+    resources:
+      - routeoptions
+      - virtualhostoptions
+      - '*'
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - gloo.solo.io
+    resources:
+      - settings
+      - upstreams
+      - upstreamgroups
+      - proxies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - infrastructure.gloo.solo.io
+    resources:
+      - cloudproviders
+      - cloudresources
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - operator.istio.io
+    resources:
+      - servicemeshcontrollers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - operator.gloo.solo.io
+    resources:
+      - servicemeshcontrollers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - install.istio.io
+    resources:
+      - istiooperators
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - internal.gloo.solo.io
+    resources:
+      - discoveredcnis
+      - discoveredgateways
+      - meshes
+      - portalconfigs
+      - spireregistrationentries
+      - virtualservicebackups
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.gloo.solo.io
+    resources:
+      - externalendpoints
+      - externalservices
+      - externalworkloads
+      - progressivedeliveries
+      - routetables
+      - virtualdestinations
+      - virtualgateways
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.istio.io
+    resources:
+      - destinationrules
+      - envoyfilters
+      - gateways
+      - serviceentries
+      - sidecars
+      - virtualservices
+      - workloadentries
+      - workloadgroups
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - observability.policy.gloo.solo.io
+    resources:
+      - accesslogpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ratelimit.solo.io
+    resources:
+      - ratelimitconfigs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterrolebindings
+      - clusterroles
+      - rolebindings
+      - roles
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - resilience.policy.gloo.solo.io
+    resources:
+      - activehealthcheckpolicies
+      - adaptiverequestconcurrencypolicies
+      - connectionpolicies
+      - failoverpolicies
+      - faultinjectionpolicies
+      - graphqlpersistedquerycachepolicies
+      - listenerconnectionpolicies
+      - outlierdetectionpolicies
+      - retrytimeoutpolicies
+      - trimproxyconfigpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - security.istio.io
+    resources:
+      - authorizationpolicies
+      - peerauthentications
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - security.policy.gloo.solo.io
+    resources:
+      - accesspolicies
+      - clienttlspolicies
+      - corspolicies
+      - csrfpolicies
+      - dlppolicies
+      - extauthpolicies
+      - graphqlallowedquerypolicies
+      - jwtpolicies
+      - wafpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - telemetry.istio.io
+    resources:
+      - telemetries
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - trafficcontrol.policy.gloo.solo.io
+    resources:
+      - headermanipulationpolicies
+      - httpbufferpolicies
+      - loadbalancerpolicies
+      - mirrorpolicies
+      - proxyprotocolpolicies
+      - ratelimitclientconfigs
+      - ratelimitpolicies
+      - transformationpolicies
+    verbs:
+      - get
+      - list
+      - watch

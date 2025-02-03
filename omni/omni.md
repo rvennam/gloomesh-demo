@@ -26,7 +26,7 @@ spec:
   gatewayClassName: gloo-gateway
   listeners:
   - protocol: HTTP
-    port: 8080
+    port: 80
     name: http
     allowedRoutes:
       namespaces:
@@ -244,6 +244,10 @@ spec:
       port: 9080
 ```
 
+```bash
+kubectl apply -f reviews-L7.yaml --context $CLUSTER1
+kubectl apply -f reviews-L7.yaml --context $CLUSTER2
+```
 
 ## Gloo Gateway as an AI Gateway
 
@@ -338,8 +342,8 @@ kubectl --context ${CLUSTER1} exec -n bookinfo deploy/ratings-v1 -c ratings -- c
 ### cluster1 will be both workload and managment:
 ```bash
 
-helm upgrade -i gloo-platform-crds gloo-platform/gloo-platform-crds -n gloo-mesh --create-namespace --version=2.7.0-rc1
-helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version 2.7.0-rc1 --values mgmt-values.yaml \
+helm upgrade -i gloo-platform-crds gloo-platform/gloo-platform-crds -n gloo-mesh --create-namespace --version=2.7.0-beta1
+helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version 2.7.0-beta1 --values mgmt-values.yaml \
   --set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY
 ```
 
@@ -349,6 +353,11 @@ export TELEMETRY_GATEWAY_ADDRESS=$(kubectl get svc -n gloo-mesh gloo-telemetry-g
 
 meshctl cluster register cluster2  --kubecontext $CLUSTER1 --profiles gloo-core-agent --remote-context $CLUSTER2 --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
 ```
+
 ```
-meshctl dashboard
+k apply -f ./gloo-mesh-ui-gloo-mesh-cluster-role.yaml
+k  set image Deployment/gloo-mesh-ui -n gloo-mesh console=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-ui:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
+k set image Deployment/gloo-mesh-ui -n gloo-mesh gloo-mesh-ui=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-apiserver:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
+
+
 ```
