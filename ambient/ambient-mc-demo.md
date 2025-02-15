@@ -1,33 +1,4 @@
-# Omni
-![alt text](image-1.png)
-Gloo: An omni-directional solution that covers ingress, service-to-service, and egress traffic with a unified approach.
-
-##  Part 1: Gloo Ambient Multi-Cluster Mesh
-
-In this part, we will set up Istio with Ambient mode across two clusters, deploy Bookinfo sample and expose multi-cluster productpage using Istio Gateway.
-
-![alt text](image-2.png)
-
-### Env
-
-1. Create two clusters
-2. Grab the latest istioctl nightly build
-
-Set env vars
-```bash
-export CLUSTER1=gke_ambient_one
-export CLUSTER2=gke_ambient_two
-export ISTIOCTL=/Users/ramvennam/Downloads/istioctl
-```
-
-Deploy Bookinfo:
-```bash
-for context in ${CLUSTER1} ${CLUSTER2}; do
-  kubectl --context ${context} create ns bookinfo 
-  kubectl --context ${context} apply -n bookinfo -f https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo.yaml
-  kubectl --context ${context} apply -n bookinfo -f https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo-versions.yaml
-done
-```
+# Ambient Multi-Cluster
 
 ### Configure Trust - Issue Intermediate Certs
 
@@ -43,12 +14,13 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
 done
 ```
 
+
 ### Install Istio on both clusters using Gloo Operator
 
-Install the operator
+Install the operator:
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
-  helm upgrade --install --kube-context=${context} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-rc.1 -n gloo-system --create-namespace &
+  helm upgrade --install --kube-context=${context} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.3 -n gloo-system --create-namespace &
 done
 ```
 
@@ -63,7 +35,6 @@ metadata:
   name: istio
 spec:
   version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
-  installNamespace: istio-system
   cluster: cluster1
   network: cluster1
   repository:
@@ -79,7 +50,6 @@ metadata:
   name: istio
 spec:
   version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
-  installNamespace: istio-system
   cluster: cluster2
   network: cluster2
   repository:
@@ -87,19 +57,6 @@ spec:
   image:
     repository: docker.io/rvennam
 EOF
-```
-
-
-### Peer the clusters together
-
-Expose using an east-west gateway:
-```bash
-$ISTIOCTL --context=${CLUSTER1} multicluster expose --wait -n istio-gateways
-$ISTIOCTL --context=${CLUSTER2} multicluster expose --wait -n istio-gateways
-```
-Link clusters together:
-```bash
-$ISTIOCTL multicluster link --contexts=$CLUSTER1,$CLUSTER2 -n istio-gateways
 ```
 
 ### Enable Istio for bookinfo Namespace
@@ -110,11 +67,24 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
 done
 ```
 
+
+### Link the clusters together
+
+Expose using an east-west gateway:
+```bash
+$ISTIOCTL --context=${CLUSTER1} multicluster expose -n istio-gateways
+$ISTIOCTL --context=${CLUSTER2} multicluster expose -n istio-gateways
+```
+Link clusters together:
+```bash
+$ISTIOCTL multicluster link --contexts=$CLUSTER1,$CLUSTER2 -n istio-gateways
+```
+
 Enable productpage to be multi-cluster on both clusters
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
   kubectl --context ${context}  -n bookinfo label service productpage solo.io/service-scope=global
-  kubectl --context ${context}  -n bookinfo annotate service productpage  networking.istio.io/traffic-distribution=Any
+  kubectl --context ${context}  -n bookinfo annotate service productpage networking.istio.io/traffic-distribution=Any
 done
 ```
 
@@ -123,6 +93,7 @@ done
 Apply the following Kubernetes Gateway API resources to cluster1 to expose productpage service using an Istio gateway:
 
 ```yaml
+kubectl --context=${CLUSTER1} apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -171,7 +142,7 @@ spec:
       group: networking.istio.io
       name: productpage.bookinfo.mesh.internal
       port: 9080
-
+EOF
 ```
 
 Wait until a LB IP gets assigned to bookinfo-gateway-istio svc and then visit the app!
@@ -201,8 +172,9 @@ done
 meshctl install --profiles gloo-core-single-cluster \
 --kubecontext $CLUSTER1 \
 --set common.cluster=cluster1 \
---set licensing.glooMeshCoreLicenseKey=$GLOO_MESH_CORE_LICENSE_KEY \
---set telemetryGateway.enabled=true
+--set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY \
+--set telemetryGateway.enabled=true \
+--set featureGates.GatewayDistribution=true
 ```
 
 ### Register cluster2 as a workload cluster to cluster1:
@@ -223,8 +195,8 @@ meshctl dashboard
 
 ```bash
 k apply -f ./gloo-mesh-ui-gloo-mesh-cluster-role.yaml
-k  set image Deployment/gloo-mesh-ui -n gloo-mesh console=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-ui:2.8.0-beta0-2025-01-28-arek-graph-807eb4b50a
-k set image Deployment/gloo-mesh-ui -n gloo-mesh gloo-mesh-ui=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-apiserver:2.8.0-beta0-2025-01-28-arek-graph-807eb4b50a
+k  set image Deployment/gloo-mesh-ui -n gloo-mesh console=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-ui:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
+k set image Deployment/gloo-mesh-ui -n gloo-mesh gloo-mesh-ui=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-apiserver:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
 
 ```
 
@@ -238,7 +210,7 @@ k set image Deployment/gloo-mesh-ui -n gloo-mesh gloo-mesh-ui=us-docker.pkg.dev/
 for context in ${CLUSTER1} ${CLUSTER2}; do
   kubectl --context=${context} scale deploy gloo-operator --replicas=1 -n gloo-system
   kubectl --context=${context} delete gateways --all -n istio-gateways
-  kubectl --context=${context} delete gateways --all -n bookinfo
+  kubectl --context=${context} delete ns bookinfo
   kubectl --context=${context} delete smc --all
   sleep 10
   helm uninstall gloo-operator -n gloo-system --kube-context=${context}
@@ -246,9 +218,7 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
   kubectl --context=${context} delete ns istio-system 
   kubectl --context=${context} delete ns gloo-system
   kubectl --context=${context} delete ns istio-gateways 
-  kubectl --context=${context} delete ns bookinfo
   meshctl uninstall --kubecontext=${context}
-  helm uninstall gloo -n gloo-system --kube-context=${context}
   kubectl --context=${context} delete ns gloo-mesh
 done
 ```
