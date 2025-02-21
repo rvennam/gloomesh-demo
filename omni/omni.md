@@ -123,14 +123,9 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
-  installNamespace: istio-system
+  version: 1.24.3
   cluster: cluster1
   network: cluster1
-  repository:
-    url: oci://registry-1.docker.io/rvennam
-  image:
-    repository: docker.io/rvennam
 EOF
 
 kubectl --context=${CLUSTER2} apply -f - <<EOF
@@ -139,14 +134,9 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
-  installNamespace: istio-system
+  version: 1.24.3
   cluster: cluster2
   network: cluster2
-  repository:
-    url: oci://registry-1.docker.io/rvennam
-  image:
-    repository: docker.io/rvennam
 EOF
 ```
 
@@ -367,8 +357,8 @@ kubectl --context ${CLUSTER1} exec -n bookinfo deploy/ratings-v1 -c ratings -- c
 ### cluster1 will be both workload and managment:
 ```bash
 
-helm upgrade -i gloo-platform-crds gloo-platform/gloo-platform-crds -n gloo-mesh --create-namespace --version=2.7.0-beta1
-helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version 2.7.0-beta1 --values mgmt-values.yaml \
+helm upgrade -i gloo-platform-crds gloo-platform/gloo-platform-crds -n gloo-mesh --create-namespace --version=2.7.0-rc2
+helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version 2.7.0-rc2 --values mgmt-values.yaml \
   --set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY
 ```
 
@@ -377,13 +367,6 @@ helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version
 export TELEMETRY_GATEWAY_ADDRESS=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}"):4317
 
 meshctl cluster register cluster2  --kubecontext $CLUSTER1 --profiles gloo-core-agent --remote-context $CLUSTER2 --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
-```
-
-To see the new graph, update the ui image:
-```bash
-k apply -f ./gloo-mesh-ui-gloo-mesh-cluster-role.yaml
-k  set image Deployment/gloo-mesh-ui -n gloo-mesh console=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-ui:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
-k set image Deployment/gloo-mesh-ui -n gloo-mesh gloo-mesh-ui=us-docker.pkg.dev/developers-369321/gloo-platform-dev/gloo-mesh-apiserver:2.7.0-beta1-2025-01-16-arek-graph-ec733223b6
 ```
 
 ![alt text](ui-screenshot.png)
