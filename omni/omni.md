@@ -90,20 +90,15 @@ EOF
 
 ## Configure Trust
 ```bash
-function create_cacerts_secret() {
-  context=${1:?context}
-  cluster=${2:?cluster}
+for context in ${CLUSTER1} ${CLUSTER2}; do
   kubectl --context=${context} create ns istio-system || true
   kubectl --context=${context} create ns istio-gateways || true
   kubectl --context=${context} create secret generic cacerts -n istio-system \
-    --from-file=$HOME/istio-1.24.2/certs/${cluster}/ca-cert.pem \
-    --from-file=$HOME/istio-1.24.2/certs/${cluster}/ca-key.pem \
-    --from-file=$HOME/istio-1.24.2/certs/${cluster}/root-cert.pem \
-    --from-file=$HOME/istio-1.24.2/certs/${cluster}/cert-chain.pem
-}
-
-create_cacerts_secret ${CLUSTER1} cluster1
-create_cacerts_secret ${CLUSTER2} cluster2
+    --from-file=./certs/${context}/ca-cert.pem \
+    --from-file=./certs/${context}/ca-key.pem \
+    --from-file=./certs/${context}/root-cert.pem \
+    --from-file=./certs/${context}/cert-chain.pem
+done
 ```
 
 ## Install the Gloo Operator
