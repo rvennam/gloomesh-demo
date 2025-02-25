@@ -11,14 +11,15 @@ gloo:
         envoyContainer:
           image:
             repository: slandow/gloo-ee-envoy-wrapper
-            tag: proxy-tlv
+            tag: proxy-tlv-with-gloo
             registry: docker.io
   gloo:
     disableLeaderElection: true
     deployment:
       image:
         repository: slandow/gloo-ee
-        tag: ambient-multinet-fix-automtls
+        # tag: ambient-multinet-fix-automtls
+        tag: proxy-tlv-latest-envoy
         registry: docker.io
       customEnv:
         # The waypoint translator is disabled by default, so must explicitly enable it
@@ -26,12 +27,14 @@ gloo:
         # That would make this much cleaner.
         - name: ENABLE_WAYPOINTS
           value: "true"
+        - name: GG_AMBIENT_MULTINETWORK
+          value: "true"
   settings:
     kubeResourceOverride:
       spec:
         # NOTE
         gloo: 
-          removeUnusedFilters: true
+          removeUnusedFilters: false
 gloo-fed:
   enabled: false
   glooFedApiserver:
