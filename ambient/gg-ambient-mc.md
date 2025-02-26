@@ -49,6 +49,8 @@ gloo:
         # That would make this much cleaner.
         - name: ENABLE_WAYPOINTS
           value: "true"
+        - name: GG_AMBIENT_MULTINETWORK
+          value: "true"
   settings:
     kubeResourceOverride:
       spec:
