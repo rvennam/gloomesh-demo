@@ -9,17 +9,11 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
   kubectl --context=${context} delete gateways --all -n bookinfo
   kubectl --context=${context} delete smc --all
   sleep 10
-  helm uninstall gloo -n gloo-system --kube-context=${context}
   helm uninstall gloo-operator -n gloo-system --kube-context=${context}
   sleep 5
-  kubectl --context=${context} delete ns istio-system 
-  kubectl --context=${context} delete ns gloo-system
   kubectl --context=${context} delete ns istio-gateways 
   kubectl --context=${context} delete ns bookinfo
   kubectl --context=${context} delete ns httpbin
-  meshctl uninstall --kubecontext=${context}
-  kubectl --context=${context} delete ns gloo-mesh
-  kubectl --context=${context} delete GatewayClass --all
 done
 
 for context in ${CLUSTER1} ${CLUSTER2}; do

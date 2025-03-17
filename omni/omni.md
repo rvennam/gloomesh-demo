@@ -32,7 +32,7 @@ helm repo update
 
 helm upgrade --install -n gloo-system gloo glooe/gloo-ee \
 --create-namespace \
---version 1.19.0-beta2 \
+--version 1.19.0-beta3 \
 --kube-context ${CLUSTER1} \
 --set-string license_key=$GLOO_GATEWAY_LICENSE_KEY \
 -f ./gg-values.yaml
@@ -86,6 +86,13 @@ spec:
 EOF
 ```
 
+Get the IP address of Gloo Gateway and hit productpage. This should route you to productpage on cluster1:
+```bash
+export GLOO_IP=$(kubectl get svc -n gloo-system gloo-proxy-http --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}") && echo $GLOO_IP
+open http://${GLOO_IP}/productpage
+```
+
+
 # Install Istio
 
 ## Configure Trust
@@ -106,7 +113,7 @@ kubectl --context=${CLUSTER2} create secret generic cacerts -n istio-system \
 --from-file=./certs/cluster2/cert-chain.pem
 ```
 
-## Install the Gloo Operator
+## Install Istio using the Gloo Operator
 ```bash
 for context in ${CLUSTER1} ${CLUSTER2}; do
   helm upgrade --install --kube-context=${context} gloo-operator oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator --version 0.1.0-beta.3 -n gloo-system --create-namespace &
@@ -140,8 +147,6 @@ spec:
 EOF
 ```
 
-
-
 ## Onboard Gloo Gateway and Bookinfo to the Mesh
 
 ```bash
@@ -173,10 +178,10 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
 done
 ```
 
-
 ## Gloo Gateway Multi-Cluster Routing
 Update the previously applied HTTPRoute to route to the global productpage destination:
 ```yaml
+kubectl --context=${CLUSTER1} apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -208,7 +213,14 @@ spec:
       group: networking.istio.io
       name: productpage.bookinfo.mesh.internal
       port: 9080
+EOF
 ```
+
+Open productpage again. You should be hitting productpage on both clusters! Check the reviews pod name to verify.
+```
+open http://${GLOO_IP}/productpage
+```
+
 
 ## Gloo Gateway as Waypoint
 
@@ -357,14 +369,14 @@ kubectl --context ${CLUSTER1} exec -n bookinfo deploy/ratings-v1 -c ratings -- c
 ### cluster1 will be both workload and managment:
 ```bash
 
-helm upgrade -i gloo-platform-crds gloo-platform/gloo-platform-crds -n gloo-mesh --create-namespace --version=2.7.0-rc2
-helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version 2.7.0-rc2 --values mgmt-values.yaml \
+helm upgrade -i gloo-platform-crds gloo-platform/gloo-platform-crds -n gloo-mesh --create-namespace --version=2.7.0
+helm upgrade -i gloo-platform gloo-platform/gloo-platform -n gloo-mesh --version 2.7.0 --values mgmt-values.yaml \
   --set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY
 ```
 
 ### Register cluster2 as a workload cluster to cluster1:
 ```bash
-export TELEMETRY_GATEWAY_ADDRESS=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}"):4317
+export TELEMETRY_GATEWAY_ADDRESS=$(kubectl get svc -n gloo-mesh gloo-telemetry-gateway --context $CLUSTER1 -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}"):4317 && echo $TELEMETRY_GATEWAY_ADDRESS
 
 meshctl cluster register cluster2  --kubecontext $CLUSTER1 --profiles gloo-core-agent --remote-context $CLUSTER2 --telemetry-server-address $TELEMETRY_GATEWAY_ADDRESS
 ```

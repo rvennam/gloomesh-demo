@@ -6,12 +6,15 @@ In this part, we will use Gloo Gateway as the Ingress, Waypoint and as an Egress
 
 ![alt text](image-1.png)
 
-## Install Gloo Gateway
 ```bash
 export CLUSTER1=gke_ambient_one
 export CLUSTER2=gke_ambient_two
 export ISTIOCTL=/Users/ramvennam/Downloads/istioctl
+```
 
+## Install Gloo Gateway
+
+```bash
 helm repo add glooe https://storage.googleapis.com/gloo-ee-helm
 helm repo update
 

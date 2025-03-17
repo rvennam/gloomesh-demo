@@ -11,7 +11,7 @@ glooMgmtServer:
   enabled: true
   registerCluster: true
   policyApis:
-    enabled: false
+    enabled: true
 glooInsightsEngine:
   enabled: true
 glooUi:
@@ -23,8 +23,10 @@ redis:
     enabled: true
 telemetryCollector:
   enabled: true
+  mode: deployment
+  replicaCount: 1
 telemetryGateway:
   enabled: true
 installEnterpriseCrds: false
 featureGates:
-  GatewayDistribution: true
+  ConfigDistribution: true

@@ -1,0 +1,24 @@
+apiVersion: gateway.solo.io/v1
+kind: RouteOption
+metadata:
+  name: routeoption
+  namespace: httpbin
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: httpbin2
+  options:
+    stagedTransformations:
+      regular:
+        requestTransforms:
+        - requestTransformation:
+            transformationTemplate:
+              extractors:
+                client:
+                  header: 'User-Agent'
+                  regex: '^([^/\s]+).*'
+                  subgroup: 1
+              headers:
+                x-client:
+                  text: "{{ client }}"

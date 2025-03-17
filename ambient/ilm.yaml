@@ -1,0 +1,21 @@
+apiVersion: admin.gloo.solo.io/v2
+kind: IstioLifecycleManager
+metadata:
+  name: istiod-control-plane
+  namespace: gloo-mesh
+spec:
+  installations:
+    - clusters:
+        - name: cluster1
+      istioOperatorSpec:
+        hub: us-docker.pkg.dev/gloo-mesh/istio-a9ee4fe9f69a
+        tag: 1.22.3-solo
+        profile: ambient
+        components:
+          cni:
+            namespace: istio-system
+            enabled: true
+        values:
+          ztunnel:
+            env:
+              L7_ENABLED: true

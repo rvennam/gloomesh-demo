@@ -14,7 +14,6 @@ for context in ${CLUSTER1} ${CLUSTER2}; do
 done
 ```
 
-
 ### Install Istio on both clusters using Gloo Operator
 
 Install the operator:
@@ -34,13 +33,9 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
+  version: 1.24.3
   cluster: cluster1
   network: cluster1
-  repository:
-    url: oci://registry-1.docker.io/rvennam
-  image:
-    repository: docker.io/rvennam
 EOF
 
 kubectl --context=${CLUSTER2} apply -f - <<EOF
@@ -49,13 +44,9 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
+  version: 1.24.3
   cluster: cluster2
   network: cluster2
-  repository:
-    url: oci://registry-1.docker.io/rvennam
-  image:
-    repository: docker.io/rvennam
 EOF
 ```
 
@@ -174,7 +165,7 @@ meshctl install --profiles gloo-core-single-cluster \
 --set common.cluster=cluster1 \
 --set licensing.glooMeshLicenseKey=$GLOO_MESH_LICENSE_KEY \
 --set telemetryGateway.enabled=true \
---set featureGates.GatewayDistribution=true
+--set featureGates.ConfigDistribution=true
 ```
 
 ### Register cluster2 as a workload cluster to cluster1:

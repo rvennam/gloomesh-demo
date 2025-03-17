@@ -1,0 +1,36 @@
+apiVersion: gateway.solo.io/v1
+kind: VirtualHostOption
+metadata:
+  name: transformation
+  namespace: bookinfo
+spec:
+  options:
+    transformations:
+      requestTransformation:
+        transformationTemplate:
+          body:
+            text: ''
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: gloo-waypoint
+    namespace: bookinfo
+
+apiVersion: gateway.solo.io/v1
+kind: RouteOption
+metadata:
+  name: routeoption
+  namespace: bookinfo
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: reviews
+  options:
+    stagedTransformations:
+      regular:
+        responseTransforms:
+        - responseTransformation:
+            transformationTemplate:
+              body: 
+                text: '{{ "hello world" | upper }}'

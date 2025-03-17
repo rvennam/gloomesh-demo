@@ -17,7 +17,7 @@ Set env vars
 ```bash
 export CLUSTER1=gke_ambient_one
 export CLUSTER2=gke_ambient_two
-export ISTIOCTL=/Users/ramvennam/Downloads/istioctl
+export ISTIOCTL=~/Downloads/istio-1.24.3-solo/bin/istioctl
 ```
 
 Deploy Bookinfo:
@@ -62,14 +62,9 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
-  installNamespace: istio-system
+  version: 1.24.3
   cluster: cluster1
   network: cluster1
-  repository:
-    url: oci://registry-1.docker.io/rvennam
-  image:
-    repository: docker.io/rvennam
 EOF
 
 kubectl --context=${CLUSTER2} apply -f - <<EOF
@@ -78,14 +73,9 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.24-alpha.c5f994b3f8c5ab3b6d00ea7347c656667dd8568d-internal
-  installNamespace: istio-system
+  version: 1.24.3
   cluster: cluster2
   network: cluster2
-  repository:
-    url: oci://registry-1.docker.io/rvennam
-  image:
-    repository: docker.io/rvennam
 EOF
 ```
 
