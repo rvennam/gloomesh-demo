@@ -21,7 +21,7 @@ Install the operator:
 for context in ${CLUSTER1} ${CLUSTER2}; do
   helm upgrade -i --kube-context=${context} gloo-operator \
     oci://us-docker.pkg.dev/solo-public/gloo-operator-helm/gloo-operator \
-    --version 0.2.0-beta.1 -n gloo-system --create-namespace \
+    --version 0.2.3 -n gloo-system --create-namespace \
     --set manager.env.SOLO_ISTIO_LICENSE_KEY=${GLOO_MESH_LICENSE_KEY} &
 done
 ```
@@ -36,7 +36,7 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.25.0
+  version: 1.25.1
   cluster: cluster1
   network: cluster1
 EOF
@@ -47,7 +47,7 @@ kind: ServiceMeshController
 metadata:
   name: istio
 spec:
-  version: 1.25.0
+  version: 1.25.1
   cluster: cluster2
   network: cluster2
 EOF
